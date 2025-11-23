@@ -33,6 +33,7 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false)
   const [savingGames, setSavingGames] = useState<Set<number>>(new Set()) // 현재 저장 중인 게임 ID
   const [filter, setFilter] = useState<GameFilter>('popular') // 인기 게임 / 최신 게임 필터
+  const [totalReviewCount, setTotalReviewCount] = useState<number>(0) // 사용자의 총 리뷰 개수
   const observerRef = useRef<IntersectionObserver | null>(null)
   const lastGameRef = useRef<HTMLDivElement | null>(null)
 
@@ -74,6 +75,24 @@ export default function OnboardingPage() {
     setPage(0)
     setHasMore(true)
   }
+
+  // 초기 로드: 사용자의 총 리뷰 개수 가져오기
+  useEffect(() => {
+    const fetchTotalReviewCount = async () => {
+      try {
+        const response = await fetch('/api/user/review-count')
+        if (response.ok) {
+          const data = await response.json()
+          setTotalReviewCount(data.count || 0)
+          console.log(`✅ 사용자 총 리뷰 개수: ${data.count}`)
+        }
+      } catch (error) {
+        console.error('Failed to fetch review count:', error)
+      }
+    }
+
+    fetchTotalReviewCount()
+  }, [])
 
   // 초기 로드 및 필터 변경 시 로드
   useEffect(() => {
@@ -196,20 +215,26 @@ export default function OnboardingPage() {
             <div>
               <h1 className="text-2xl font-bold">취향 평가</h1>
               <p className="text-sm text-muted-foreground">
-                게임에 평점을 매겨주세요. 평점을 많이 매길수록 더 정확한 추천을 받을 수 있어요.
+                {totalReviewCount >= 10
+                  ? '게임에 평점을 매겨주세요. 평점을 많이 매길수록 더 정확한 추천을 받을 수 있어요.'
+                  : '최소 10개의 게임에 평점을 매겨주세요. 이를 바탕으로 맞춤 추천을 제공합니다.'}
               </p>
             </div>
             <div className="flex items-center gap-6">
               <div className="text-right">
                 <div className="text-5xl font-bold">
                   {ratings.size}
-                  <span className="text-2xl text-muted-foreground"> / 10</span>
+                  {totalReviewCount < 10 && (
+                    <span className="text-2xl text-muted-foreground"> / 10</span>
+                  )}
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">평가한 게임</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {totalReviewCount >= 10 ? '추가 평가한 게임' : '평가한 게임'}
+                </div>
               </div>
               <Button
                 onClick={handleComplete}
-                disabled={ratings.size < 10}
+                disabled={totalReviewCount < 10 && ratings.size < 10}
                 size="lg"
               >
                 완료
