@@ -1,0 +1,415 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            String    @id @default(cuid())
+  username      String?   @unique
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  password      String?
+  role          String    @default("user") // user, expert, influencer
+
+  // Steam 연동
+  steamId       String?   @unique
+  steamUsername String?
+
+  reviews          Review[]
+  lists            GameList[]
+  likes            ReviewLike[]
+  followers        Follow[]           @relation("Follower")
+  following        Follow[]           @relation("Following")
+  developer        Developer?
+
+  // Community
+  ownedCommunities Community[]        @relation("CommunityOwner")
+  communityMembers CommunityMember[]
+  posts            Post[]
+  comments         Comment[]
+  postLikes        PostLike[]
+  postViews        PostView[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+  @@index([username])
+  @@index([steamId])
+}
+
+// Game model
+model Game {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  coverImage      String?
+  releaseDate     DateTime?
+  platforms       String   // JSON string of platform codes
+  genres          String   // JSON string of genres
+  developer       String?
+  publisher       String?
+  igdbId          Int?     @unique  // IGDB API game ID
+  metacriticScore Int?     // Metacritic score (0-100)
+
+  // OpenCritic scores
+  opencriticId              Int?     // OpenCritic game ID
+  opencriticScore           Float?   // OpenCritic score (0-100)
+  opencriticPercentRecommended Float? // Percent recommended (0-100)
+  opencriticTier            String?  // Mighty, Strong, Fair, Weak
+
+  // Aggregated statistics
+  averageRating   Float    @default(0)
+  totalReviews    Int      @default(0)
+  verifiedReviews Int      @default(0)
+
+  reviews         Review[]
+  listItems       ListItem[]
+  announcements   Announcement[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([title])
+  @@index([averageRating])
+  @@index([releaseDate])
+}
+
+// Review model
+model Review {
+  id                 String   @id @default(cuid())
+  gameId             String
+  userId             String
+  rating             Float    // 0.5 to 5.0
+  comment            String?
+  label              String   // 매우 긍정적, 긍정적, 혼합, 부정적, 매우 부정적
+
+  // Verification
+  isVerified         Boolean  @default(false)
+  verificationType   String?  // STEAM, PLAYSTATION, XBOX, SCREENSHOT
+  verificationProof  String?  // URL or file path
+
+  // Element ratings (optional)
+  priceRating        Float?   // 가격 만족도
+  graphicsRating     Float?   // 그래픽
+  controlRating      Float?   // 조작감
+  directionRating    Float?   // 연출
+  storyRating        Float?   // 스토리
+  soundRating        Float?   // OST
+  volumeRating       Float?   // 컨텐츠 볼륨
+  innovationRating   Float?   // 혁신성과 독창성
+
+  // Social
+  likesCount         Int      @default(0)
+
+  game               Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes              ReviewLike[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([gameId, userId]) // One review per user per game
+  @@index([gameId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([rating])
+}
+
+// Review likes
+model ReviewLike {
+  id        String   @id @default(cuid())
+  reviewId  String
+  userId    String
+  type      String   @default("like") // "like" or "dislike"
+
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+  @@index([userId])
+}
+
+// Game lists
+model GameList {
+  id          String     @id @default(cuid())
+  userId      String
+  name        String
+  type        String     // PLAYING, PLAN_TO_PLAY, COMPLETED, TOP10, YEAR_BEST, CUSTOM
+  description String?
+  isPublic    Boolean    @default(true)
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       ListItem[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([type])
+}
+
+// List items
+model ListItem {
+  id        String   @id @default(cuid())
+  listId    String
+  gameId    String
+  order     Int      @default(0)
+
+  list      GameList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([listId, gameId])
+  @@index([listId])
+  @@index([gameId])
+}
+
+// Follow system
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// Developer accounts
+model Developer {
+  id           String         @id @default(cuid())
+  userId       String         @unique
+  companyName  String
+  isVerified   Boolean        @default(false)
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcements Announcement[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+// Developer announcements
+model Announcement {
+  id          String    @id @default(cuid())
+  gameId      String
+  developerId String
+  title       String
+  content     String
+  type        String    // ANNOUNCEMENT, PATCH_NOTE, RESPONSE
+  isPinned    Boolean   @default(false)
+
+  game        Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  developer   Developer @relation(fields: [developerId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([gameId])
+  @@index([developerId])
+  @@index([createdAt])
+}
+
+// Email verification tokens
+model VerificationToken {
+  id         String   @id @default(cuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  createdAt  DateTime @default(now())
+
+  @@unique([email, token])
+  @@index([email])
+  @@index([token])
+}
+
+// Community (동아리)
+model Community {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  gameId      String?  // 특정 게임 전용 동아리 (선택)
+  image       String?  // 동아리 이미지
+  ownerId     String
+
+  owner       User               @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     CommunityMember[]
+  categories  Category[]
+  boards      Board[]
+  posts       Post[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+  @@index([ownerId])
+  @@index([gameId])
+}
+
+// Community Member (동아리 멤버)
+model CommunityMember {
+  id          String   @id @default(cuid())
+  communityId String
+  userId      String
+  role        String   @default("member") // member, moderator, admin
+  nickname    String?  // 동아리 내 별명
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+
+  @@unique([communityId, userId])
+  @@unique([communityId, nickname]) // 동아리 내 별명 중복 방지
+  @@index([communityId])
+  @@index([userId])
+}
+
+// Category (카테고리)
+model Category {
+  id          String   @id @default(cuid())
+  communityId String
+  name        String
+  description String?
+  order       Int      @default(0) // 정렬 순서
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  boards      Board[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([communityId])
+  @@index([order])
+}
+
+// Board (게시판)
+model Board {
+  id            String   @id @default(cuid())
+  communityId   String
+  categoryId    String?  // 카테고리 (선택적)
+  name          String
+  description   String?
+  order         Int      @default(0) // 정렬 순서
+  isNoticeBoard Boolean  @default(false) // 공지사항 전용 게시판 여부
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  posts       Post[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([communityId])
+  @@index([categoryId])
+  @@index([order])
+  @@index([isNoticeBoard])
+}
+
+// Post (게시글)
+model Post {
+  id          String   @id @default(cuid())
+  communityId String
+  boardId     String?  // 게시판 (선택적)
+  userId      String
+  title       String
+  content     String
+  images      String[] // 이미지 URL 목록
+  tags        String[] @default([]) // 태그 목록
+  isNotice    Boolean  @default(false) // 공지사항 여부
+  likesCount  Int      @default(0)
+  commentsCount Int    @default(0)
+  viewsCount  Int      @default(0) // 조회수
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  board       Board?    @relation(fields: [boardId], references: [id], onDelete: SetNull)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  likes       PostLike[]
+  views       PostView[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([communityId])
+  @@index([boardId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isNotice])
+}
+
+// Comment (댓글)
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  content   String
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Post Like (게시글 좋아요)
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+// Post View (게시글 조회)
+model PostView {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
