@@ -60,6 +60,7 @@ model Game {
   releaseDate     DateTime?
   platforms       String   // JSON string of platform codes
   genres          String   // JSON string of genres
+  tags            String?  // JSON string of Steam tags (from Steam Spy)
   developer       String?
   publisher       String?
   igdbId          Int?     @unique  // IGDB API game ID

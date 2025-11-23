@@ -552,3 +552,54 @@ export async function getSteamReviews(steamAppId: number): Promise<{
     return null
   }
 }
+
+/**
+ * Get Steam tags from Steam Spy API
+ * Steam Spy provides user-generated tags that are much more detailed than official genres
+ */
+export async function getSteamTags(steamAppId: number): Promise<string[] | null> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+    const response = await fetch(
+      `https://steamspy.com/api.php?request=appdetails&appid=${steamAppId}`,
+      {
+        headers: {
+          'User-Agent': 'GAMERATE/1.0',
+        },
+        signal: controller.signal,
+      }
+    )
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+
+    if (!data || !data.tags) {
+      return null
+    }
+
+    // Steam Spy returns tags as an object with tag names as keys and vote counts as values
+    // Example: { "Roguelike": 1234, "Action": 5678, ... }
+    // We'll convert this to an array sorted by vote count (most popular first)
+    const tags = Object.entries(data.tags)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .slice(0, 10) // Take top 10 tags
+      .map(([tag]) => tag)
+
+    console.log(`✅ Steam tags for ${steamAppId}: ${tags.join(', ')}`)
+    return tags
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn(`⏱️ Steam Spy timeout for ${steamAppId}`)
+    } else {
+      console.error(`Failed to fetch Steam tags for ${steamAppId}:`, error)
+    }
+    return null
+  }
+}

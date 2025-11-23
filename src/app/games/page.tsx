@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GameCard } from '@/components/features/game-card'
 import { GenreCircle } from '@/components/features/genre-circle'
 import { Filter } from 'lucide-react'
 
 export default function GamesPage() {
+  const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<'popular' | 'recent' | 'recommended'>('popular')
   const [popularGames, setPopularGames] = useState<any[]>([])
   const [recentGames, setRecentGames] = useState<any[]>([])
@@ -157,7 +159,7 @@ export default function GamesPage() {
       <Tabs value={activeTab} className="w-full" onValueChange={(val) => setActiveTab(val as 'popular' | 'recent' | 'recommended')}>
         <div className="flex items-center justify-between mb-6">
           <TabsList>
-            <TabsTrigger value="recommended">추천 게임</TabsTrigger>
+            {session && <TabsTrigger value="recommended">추천 게임</TabsTrigger>}
             <TabsTrigger value="popular">인기 게임</TabsTrigger>
             <TabsTrigger value="recent">최신 게임</TabsTrigger>
           </TabsList>
@@ -192,54 +194,56 @@ export default function GamesPage() {
           </div>
         )}
 
-        <TabsContent value="recommended">
-          {error ? (
-            <div className="text-center py-12">
-              <p className="text-red-500 mb-4">{error}</p>
-              <button
-                onClick={() => {
-                  setError(null)
-                  loadGames('recommended', 0)
-                }}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-              >
-                다시 시도
-              </button>
-            </div>
-          ) : recommendedGames.length > 0 ? (
-            <>
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground">
-                  회원님이 평가한 게임을 기반으로 추천드립니다
-                </p>
+        {session && (
+          <TabsContent value="recommended">
+            {error ? (
+              <div className="text-center py-12">
+                <p className="text-red-500 mb-4">{error}</p>
+                <button
+                  onClick={() => {
+                    setError(null)
+                    loadGames('recommended', 0)
+                  }}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                >
+                  다시 시도
+                </button>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
-                {recommendedGames.map((game) => (
-                  <GameCard
-                    key={game.id}
-                    id={game.id.toString()}
-                    title={game.title}
-                    coverImage={game.coverImage}
-                    averageRating={game.averageRating || 0}
-                    totalReviews={game.totalReviews || 0}
-                    genres={game.genres}
-                    platforms={game.platforms}
-                    releaseDate={game.releaseDate}
-                  />
-                ))}
-              </div>
-              {hasMoreRecommended && (
-                <div ref={observerTarget} className="flex justify-center py-8">
-                  {loading && <div className="text-muted-foreground">로딩 중...</div>}
+            ) : recommendedGames.length > 0 ? (
+              <>
+                <div className="mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    회원님이 평가한 게임을 기반으로 추천드립니다
+                  </p>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              {loading ? '로딩 중...' : '추천할 게임이 없습니다. 온보딩에서 게임을 평가해보세요!'}
-            </div>
-          )}
-        </TabsContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
+                  {recommendedGames.map((game) => (
+                    <GameCard
+                      key={game.id}
+                      id={game.id.toString()}
+                      title={game.title}
+                      coverImage={game.coverImage}
+                      averageRating={game.averageRating || 0}
+                      totalReviews={game.totalReviews || 0}
+                      genres={game.genres}
+                      platforms={game.platforms}
+                      releaseDate={game.releaseDate}
+                    />
+                  ))}
+                </div>
+                {hasMoreRecommended && (
+                  <div ref={observerTarget} className="flex justify-center py-8">
+                    {loading && <div className="text-muted-foreground">로딩 중...</div>}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                {loading ? '로딩 중...' : '추천할 게임이 없습니다. 온보딩에서 게임을 평가해보세요!'}
+              </div>
+            )}
+          </TabsContent>
+        )}
 
         <TabsContent value="popular">
           {error ? (

@@ -58,8 +58,9 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // 2. 장르 분석: 평가한 게임들의 장르를 카운트
+    // 2. 장르 및 태그 분석: 평가한 게임들의 장르와 태그를 카운트
     const genreCount: Record<string, number> = {}
+    const tagCount: Record<string, number> = {}
 
     for (const review of userReviews) {
       if (review.game.genres) {
@@ -68,17 +69,32 @@ export async function GET(request: NextRequest) {
           genreCount[genre] = (genreCount[genre] || 0) + 1
         }
       }
+
+      // 태그 분석 추가
+      if (review.game.tags) {
+        const tags = JSON.parse(review.game.tags) as string[]
+        for (const tag of tags) {
+          tagCount[tag] = (tagCount[tag] || 0) + 1
+        }
+      }
     }
 
     console.log('[API] Genre analysis:', genreCount)
+    console.log('[API] Tag analysis:', tagCount)
 
-    // 3. 가장 많이 평가한 장르 상위 3개 추출
+    // 3. 가장 많이 평가한 장르 상위 3개 및 태그 상위 5개 추출
     const topGenres = Object.entries(genreCount)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 3)
       .map(([genre]) => genre)
 
+    const topTags = Object.entries(tagCount)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([tag]) => tag)
+
     console.log('[API] Top 3 preferred genres:', topGenres)
+    console.log('[API] Top 5 preferred tags:', topTags)
 
     // 장르가 없으면 인기 게임 반환
     if (topGenres.length === 0) {
@@ -105,68 +121,112 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // 4. 선호 장르에 맞는 게임 검색
-    const games = await getPopularGames(limit * 2, offset, topGenres)
-    console.log(`[API] Fetched ${games.length} games from IGDB with preferred genres`)
-
-    // 5. 이미 평가한 게임 ID 목록
+    // 4. 이미 평가한 게임 ID 목록
     const reviewedGameIds = new Set(userReviews.map(r => r.game.igdbId))
 
-    // 6. 이미 평가한 게임 제외
-    const filteredGames = games.filter(game => !reviewedGameIds.has(game.id))
-    console.log(`[API] Filtered out reviewed games: ${games.length} -> ${filteredGames.length}`)
+    // 5. DB에서 태그 기반 추천 게임 찾기
+    let recommendedGames: any[] = []
 
-    // 7. limit 개수만큼 자르기
-    const limitedGames = filteredGames.slice(0, limit)
-
-    // 8. DB에서 평점 정보 가져오기
-    const igdbIds = limitedGames.map(game => game.id)
-    let dbGames: { igdbId: number; averageRating: number; totalReviews: number }[] = []
-
-    try {
-      dbGames = await prisma.game.findMany({
+    if (topTags.length > 0) {
+      console.log('[API] Querying DB for games with matching tags...')
+      // 태그를 포함하는 게임 찾기 (JSON 필드 검색)
+      const dbMatchingGames = await prisma.game.findMany({
         where: {
-          igdbId: { in: igdbIds }
+          AND: [
+            {
+              igdbId: {
+                notIn: Array.from(reviewedGameIds)
+              }
+            },
+            {
+              tags: {
+                not: null
+              }
+            }
+          ]
         },
-        select: {
-          igdbId: true,
-          averageRating: true,
-          totalReviews: true,
-        }
+        orderBy: {
+          averageRating: 'desc'
+        },
+        take: limit * 3,
       })
-      console.log(`[API] Loaded ratings for ${dbGames.length}/${limitedGames.length} games from DB`)
-    } catch (error) {
-      console.error('DB batch query error:', error)
-    }
 
-    // 평점 맵 생성
-    const ratingsMap = new Map(
-      dbGames.map(game => [game.igdbId, { averageRating: game.averageRating, totalReviews: game.totalReviews }])
-    )
+      // 태그 매칭 점수 계산 및 정렬
+      const scoredGames = dbMatchingGames.map(game => {
+        const gameTags = game.tags ? JSON.parse(game.tags) as string[] : []
+        const gameGenres = game.genres ? JSON.parse(game.genres) as string[] : []
 
-    // 9. 게임 변환 및 평점 정보 추가
-    const convertedGames = await Promise.all(
-      limitedGames.map(async (game) => {
-        const converted = await convertIGDBGame(game)
-        const ratings = ratingsMap.get(game.id)
+        // 태그 매칭 점수 (더 높은 가중치)
+        const tagMatchCount = topTags.filter(tag => gameTags.includes(tag)).length
+        // 장르 매칭 점수
+        const genreMatchCount = topGenres.filter(genre => gameGenres.includes(genre)).length
+
+        const score = tagMatchCount * 2 + genreMatchCount
 
         return {
-          id: game.id,
-          ...converted,
-          genres: converted.genres ? JSON.parse(converted.genres) : [],
-          platforms: converted.platforms ? JSON.parse(converted.platforms) : [],
-          averageRating: ratings?.averageRating || 0,
-          totalReviews: ratings?.totalReviews || 0,
+          ...game,
+          matchScore: score,
+          tagMatches: tagMatchCount,
+          genreMatches: genreMatchCount,
         }
       })
-    )
+
+      // 매칭 점수 순으로 정렬
+      recommendedGames = scoredGames
+        .filter(game => game.matchScore > 0)
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .slice(0, limit)
+
+      console.log(`[API] Found ${recommendedGames.length} games from DB with tag/genre matches`)
+    }
+
+    // 6. DB에서 충분한 게임을 못 찾았으면 IGDB에서 보충
+    if (recommendedGames.length < limit) {
+      console.log(`[API] Need more games, fetching from IGDB...`)
+      const neededCount = limit - recommendedGames.length
+      const igdbGames = await getPopularGames(neededCount * 2, offset, topGenres)
+
+      // IGDB 게임 필터링 및 변환
+      const filteredIgdbGames = igdbGames.filter(game => !reviewedGameIds.has(game.id))
+
+      for (const igdbGame of filteredIgdbGames.slice(0, neededCount)) {
+        const converted = await convertIGDBGame(igdbGame)
+        recommendedGames.push({
+          igdbId: igdbGame.id,
+          ...converted,
+          averageRating: 0,
+          totalReviews: 0,
+          matchScore: 1, // 기본 점수
+        })
+      }
+
+      console.log(`[API] Added ${filteredIgdbGames.slice(0, neededCount).length} games from IGDB`)
+    }
+
+    // 7. 최종 게임 목록 포맷팅
+    const convertedGames = recommendedGames.map(game => ({
+      id: game.igdbId,
+      title: game.title,
+      description: game.description,
+      coverImage: game.coverImage,
+      releaseDate: game.releaseDate,
+      platforms: game.platforms ? JSON.parse(game.platforms) : [],
+      genres: game.genres ? JSON.parse(game.genres) : [],
+      tags: game.tags ? JSON.parse(game.tags) : [],
+      developer: game.developer,
+      publisher: game.publisher,
+      metacriticScore: game.metacriticScore,
+      averageRating: game.averageRating || 0,
+      totalReviews: game.totalReviews || 0,
+    }))
 
     console.log(`[API] Returning ${convertedGames.length} recommended games`)
 
     return NextResponse.json({
       games: convertedGames,
-      hasMore: filteredGames.length > limit,
+      hasMore: recommendedGames.length >= limit,
       preferredGenres: topGenres, // 디버깅용
+      preferredTags: topTags, // 디버깅용
     })
   } catch (error) {
     console.error('Recommended games error:', error)

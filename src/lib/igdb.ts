@@ -348,7 +348,11 @@ async function getKoreanTitle(igdbGame: IGDBGame): Promise<string | null> {
 /**
  * Convert IGDB game to our Game model format
  */
-export async function convertIGDBGame(igdbGame: IGDBGame, metacriticScore?: number | null) {
+export async function convertIGDBGame(
+  igdbGame: IGDBGame,
+  metacriticScore?: number | null,
+  steamTags?: string[] | null
+) {
   const developers = igdbGame.involved_companies
     ?.filter((ic) => ic.developer)
     .map((ic) => ic.company.name)
@@ -370,6 +374,7 @@ export async function convertIGDBGame(igdbGame: IGDBGame, metacriticScore?: numb
       : null,
     platforms: JSON.stringify(igdbGame.platforms?.map((p) => p.name) || []),
     genres: JSON.stringify(igdbGame.genres?.map((g) => g.name) || []),
+    tags: steamTags ? JSON.stringify(steamTags) : null,
     developer: developers?.[0] || null,
     publisher: publishers?.[0] || null,
     metacriticScore: metacriticScore !== undefined

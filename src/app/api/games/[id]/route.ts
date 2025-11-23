@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getGameById, convertIGDBGame } from '@/lib/igdb'
-import { extractSteamId, getCurrentPlayers, getSteamPriceInfo, getSteamMetacritic, getSteamReviews, getSteamGameDescription } from '@/lib/steam'
+import { extractSteamId, getCurrentPlayers, getSteamPriceInfo, getSteamMetacritic, getSteamReviews, getSteamGameDescription, getSteamTags } from '@/lib/steam'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -89,12 +89,13 @@ export async function GET(
     let steamMetacriticScore: number | null = null
 
     if (steamId) {
-      const [currentPlayers, priceInfo, metacritic, reviews, description] = await Promise.all([
+      const [currentPlayers, priceInfo, metacritic, reviews, description, steamTags] = await Promise.all([
         getCurrentPlayers(steamId),
         getSteamPriceInfo(steamId),
         getSteamMetacritic(steamId),
         getSteamReviews(steamId),
         getSteamGameDescription(steamId),
+        getSteamTags(steamId),
       ])
 
       // Transform price info to match frontend expectations
@@ -141,7 +142,7 @@ export async function GET(
 
     // If not in our DB, save it with Steam Metacritic score if available
     if (!game) {
-      const gameData = await convertIGDBGame(igdbGame, steamMetacriticScore)
+      const gameData = await convertIGDBGame(igdbGame, steamMetacriticScore, steamTags)
 
       try {
         game = await prisma.game.create({
