@@ -190,7 +190,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="sticky top-20 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -199,14 +199,17 @@ export default function OnboardingPage() {
                 게임에 평점을 매겨주세요. 평점을 많이 매길수록 더 정확한 추천을 받을 수 있어요.
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div className="text-right">
-                <div className="text-3xl font-bold">{ratings.size}</div>
-                <div className="text-xs text-muted-foreground">평가한 게임</div>
+                <div className="text-5xl font-bold">
+                  {ratings.size}
+                  <span className="text-2xl text-muted-foreground"> / 10</span>
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">평가한 게임</div>
               </div>
               <Button
                 onClick={handleComplete}
-                disabled={ratings.size === 0}
+                disabled={ratings.size < 10}
                 size="lg"
               >
                 완료
@@ -364,8 +367,13 @@ export default function OnboardingPage() {
               <div className="text-muted-foreground">
                 모든 게임을 확인했습니다
               </div>
-              <Button onClick={handleComplete} className="mt-4" size="lg">
-                {ratings.size > 0 ? '평가 완료' : '건너뛰기'}
+              <Button
+                onClick={handleComplete}
+                className="mt-4"
+                size="lg"
+                disabled={ratings.size < 10}
+              >
+                {ratings.size >= 10 ? '평가 완료' : `${10 - ratings.size}개 더 평가해주세요`}
               </Button>
             </div>
           )}

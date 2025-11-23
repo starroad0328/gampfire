@@ -7,27 +7,38 @@ import { GenreCircle } from '@/components/features/genre-circle'
 import { Filter } from 'lucide-react'
 
 export default function GamesPage() {
-  const [activeTab, setActiveTab] = useState<'popular' | 'recent'>('popular')
+  const [activeTab, setActiveTab] = useState<'popular' | 'recent' | 'recommended'>('popular')
   const [popularGames, setPopularGames] = useState<any[]>([])
   const [recentGames, setRecentGames] = useState<any[]>([])
+  const [recommendedGames, setRecommendedGames] = useState<any[]>([])
   const [popularOffset, setPopularOffset] = useState(0)
   const [recentOffset, setRecentOffset] = useState(0)
+  const [recommendedOffset, setRecommendedOffset] = useState(0)
   const [loading, setLoading] = useState(false)
   const [hasMorePopular, setHasMorePopular] = useState(true)
   const [hasMoreRecent, setHasMoreRecent] = useState(true)
+  const [hasMoreRecommended, setHasMoreRecommended] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showGenreCircle, setShowGenreCircle] = useState(false)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const observerTarget = useRef<HTMLDivElement>(null)
 
-  const loadGames = useCallback(async (type: 'popular' | 'recent', offset: number, genres?: string[]) => {
+  const loadGames = useCallback(async (type: 'popular' | 'recent' | 'recommended', offset: number, genres?: string[]) => {
     if (loading) return
 
     setLoading(true)
     setError(null)
     try {
-      const genreQuery = genres && genres.length > 0 ? `&genres=${genres.join(',')}` : ''
-      const res = await fetch(`/api/games/list?type=${type}&offset=${offset}&limit=25${genreQuery}`)
+      let res: Response
+
+      if (type === 'recommended') {
+        // 추천 게임은 별도 API 사용
+        res = await fetch(`/api/games/recommended?offset=${offset}&limit=25`)
+      } else {
+        // 인기/최신은 기존 list API 사용
+        const genreQuery = genres && genres.length > 0 ? `&genres=${genres.join(',')}` : ''
+        res = await fetch(`/api/games/list?type=${type}&offset=${offset}&limit=25${genreQuery}`)
+      }
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
@@ -58,7 +69,7 @@ export default function GamesPage() {
         })
         setPopularOffset(offset + 25)
         setHasMorePopular(data.hasMore)
-      } else {
+      } else if (type === 'recent') {
         setRecentGames(prev => {
           // Prevent duplicates by filtering out existing game IDs
           const existingIds = new Set(prev.map(g => g.id))
@@ -67,6 +78,15 @@ export default function GamesPage() {
         })
         setRecentOffset(offset + 25)
         setHasMoreRecent(data.hasMore)
+      } else if (type === 'recommended') {
+        setRecommendedGames(prev => {
+          // Prevent duplicates by filtering out existing game IDs
+          const existingIds = new Set(prev.map(g => g.id))
+          const newGames = data.games.filter((g: any) => !existingIds.has(g.id))
+          return [...prev, ...newGames]
+        })
+        setRecommendedOffset(offset + 25)
+        setHasMoreRecommended(data.hasMore)
       }
     } catch (error) {
       console.error('Failed to load games:', error)
@@ -80,6 +100,7 @@ export default function GamesPage() {
   useEffect(() => {
     loadGames('popular', 0, selectedGenres)
     loadGames('recent', 0, selectedGenres)
+    loadGames('recommended', 0)
   }, [])
 
   // Reload when genres change
@@ -105,6 +126,8 @@ export default function GamesPage() {
             loadGames('popular', popularOffset, selectedGenres)
           } else if (activeTab === 'recent' && hasMoreRecent) {
             loadGames('recent', recentOffset, selectedGenres)
+          } else if (activeTab === 'recommended' && hasMoreRecommended) {
+            loadGames('recommended', recommendedOffset)
           }
         }
       },
@@ -116,7 +139,7 @@ export default function GamesPage() {
     }
 
     return () => observer.disconnect()
-  }, [activeTab, loading, hasMorePopular, hasMoreRecent, popularOffset, recentOffset, selectedGenres, loadGames])
+  }, [activeTab, loading, hasMorePopular, hasMoreRecent, hasMoreRecommended, popularOffset, recentOffset, recommendedOffset, selectedGenres, loadGames])
 
   const handleGenreSelect = (genres: string[]) => {
     setSelectedGenres(genres)
@@ -131,9 +154,10 @@ export default function GamesPage() {
         </p>
       </div>
 
-      <Tabs value={activeTab} className="w-full" onValueChange={(val) => setActiveTab(val as 'popular' | 'recent')}>
+      <Tabs value={activeTab} className="w-full" onValueChange={(val) => setActiveTab(val as 'popular' | 'recent' | 'recommended')}>
         <div className="flex items-center justify-between mb-6">
           <TabsList>
+            <TabsTrigger value="recommended">추천 게임</TabsTrigger>
             <TabsTrigger value="popular">인기 게임</TabsTrigger>
             <TabsTrigger value="recent">최신 게임</TabsTrigger>
           </TabsList>
@@ -167,6 +191,55 @@ export default function GamesPage() {
             </button>
           </div>
         )}
+
+        <TabsContent value="recommended">
+          {error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">{error}</p>
+              <button
+                onClick={() => {
+                  setError(null)
+                  loadGames('recommended', 0)
+                }}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : recommendedGames.length > 0 ? (
+            <>
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground">
+                  회원님이 평가한 게임을 기반으로 추천드립니다
+                </p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
+                {recommendedGames.map((game) => (
+                  <GameCard
+                    key={game.id}
+                    id={game.id.toString()}
+                    title={game.title}
+                    coverImage={game.coverImage}
+                    averageRating={game.averageRating || 0}
+                    totalReviews={game.totalReviews || 0}
+                    genres={game.genres}
+                    platforms={game.platforms}
+                    releaseDate={game.releaseDate}
+                  />
+                ))}
+              </div>
+              {hasMoreRecommended && (
+                <div ref={observerTarget} className="flex justify-center py-8">
+                  {loading && <div className="text-muted-foreground">로딩 중...</div>}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              {loading ? '로딩 중...' : '추천할 게임이 없습니다. 온보딩에서 게임을 평가해보세요!'}
+            </div>
+          )}
+        </TabsContent>
 
         <TabsContent value="popular">
           {error ? (

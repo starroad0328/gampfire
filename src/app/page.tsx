@@ -2,9 +2,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Star, Users } from 'lucide-react'
+import { Star, Users, Sparkles } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { cookies } from 'next/headers'
 
 async function getPopularGames() {
   try {
@@ -33,10 +34,47 @@ async function getPopularGames() {
   }
 }
 
+async function getRecommendedGames() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+
+    // Get session token for authenticated request
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get('next-auth.session-token') || cookieStore.get('__Secure-next-auth.session-token')
+
+    if (!sessionToken) {
+      return []
+    }
+
+    const response = await fetch(`${baseUrl}/api/games/recommended?limit=4`, {
+      cache: 'no-store',
+      headers: {
+        Cookie: `${sessionToken.name}=${sessionToken.value}`
+      }
+    })
+
+    if (!response.ok) {
+      console.error('❌ Recommended games API failed:', response.status)
+      return []
+    }
+
+    const data = await response.json()
+    const games = data.games || []
+    console.log('✅ Loaded', games.length, 'recommended games from API')
+
+    return games
+  } catch (error) {
+    console.error('❌ Failed to fetch recommended games:', error)
+    return []
+  }
+}
+
 export default async function Home() {
   const games = await getPopularGames()
   const session = await getServerSession(authOptions)
+  const recommendedGames = session ? await getRecommendedGames() : []
   console.log('🎮 Loaded games for background:', games.length)
+  console.log('✨ Loaded recommended games:', recommendedGames.length)
 
   return (
     <div className="min-h-screen">
@@ -130,6 +168,72 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Recommended Games Section - Only for logged-in users */}
+      {session && recommendedGames.length > 0 && (
+        <section className="py-20 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-8 h-8 text-primary" />
+                <h2 className="text-3xl font-bold">
+                  {session.user?.name}님을 위한 추천 게임
+                </h2>
+              </div>
+              <Button variant="outline" asChild>
+                <Link href="/games">더 보기</Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {recommendedGames.map((game: any) => (
+                <Link
+                  key={game.id}
+                  href={`/games/${game.id}`}
+                  className="group"
+                >
+                  <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+                    <div className="aspect-[3/4] relative bg-muted">
+                      {game.coverImage && (
+                        <Image
+                          src={game.coverImage}
+                          alt={game.title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                        />
+                      )}
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-sm line-clamp-2 mb-2">
+                        {game.title}
+                      </h3>
+                      {game.averageRating > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <span>{game.averageRating.toFixed(1)}</span>
+                          <span>({game.totalReviews})</span>
+                        </div>
+                      )}
+                      {game.genres && game.genres.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {game.genres.slice(0, 2).map((genre: string) => (
+                            <span
+                              key={genre}
+                              className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
+                            >
+                              {genre}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
