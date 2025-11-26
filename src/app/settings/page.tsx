@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { ProfileSettingsForm } from '@/components/features/profile-settings-form'
+import { SettingsTabs } from '@/components/features/settings-tabs'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -35,18 +35,20 @@ export default async function SettingsPage() {
           </Link>
           <h1 className="text-3xl font-bold text-foreground">계정 설정</h1>
           <p className="text-muted-foreground mt-2">
-            프로필 정보를 수정하세요
+            계정 정보 및 개인정보 설정을 관리하세요
           </p>
         </div>
 
-        {/* Settings Form */}
-        <ProfileSettingsForm
+        {/* Settings Tabs */}
+        <SettingsTabs
           user={{
             id: user.id,
             name: user.name,
             username: user.username,
             email: user.email,
             image: user.image,
+            profileVisibility: user.profileVisibility,
+            reviewVisibility: user.reviewVisibility,
           }}
         />
       </div>

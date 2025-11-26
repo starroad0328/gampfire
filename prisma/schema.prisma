@@ -28,6 +28,10 @@ model User {
   steamId       String?   @unique
   steamUsername String?
 
+  // 개인정보 설정
+  profileVisibility String @default("public") // public, private
+  reviewVisibility  String @default("public") // public, followers, private
+
   reviews          Review[]
   lists            GameList[]
   likes            ReviewLike[]
