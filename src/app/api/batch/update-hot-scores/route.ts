@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSteamTopSellers, getSteamMostPlayed, calculateHotScore } from '@/lib/steam'
-import { searchGames } from '@/lib/igdb'
+import { searchGames, getGameById, convertIGDBGame, searchGameBySteamId } from '@/lib/igdb'
 
 // 배치 작업 보안을 위한 시크릿 키 (환경 변수로 설정)
 const BATCH_SECRET = process.env.BATCH_SECRET || 'dev-batch-secret'
@@ -11,23 +11,42 @@ const BATCH_SECRET = process.env.BATCH_SECRET || 'dev-batch-secret'
  */
 async function findIgdbGameBySteamId(steamAppId: number, steamName: string): Promise<number | null> {
   try {
-    // DB에서 먼저 찾기 (이미 매칭된 게임)
-    const existingGame = await prisma.game.findFirst({
-      where: {
-        igdbId: { not: null },
-      },
-      select: { igdbId: true },
-    })
+    // 1. IGDB에서 Steam URL로 직접 검색 (가장 정확)
+    const gameByUrl = await searchGameBySteamId(steamAppId)
+    if (gameByUrl) {
+      console.log(`✅ Found by Steam URL: ${steamName} → IGDB ${gameByUrl}`)
+      return gameByUrl
+    }
 
-    // IGDB에서 이름으로 검색
+    // 2. 이름으로 검색 (fallback)
     if (steamName) {
-      const games = await searchGames(steamName, 5)
+      // 이름 정규화: 특수문자 제거, 소문자 변환
+      const normalizedName = steamName
+        .replace(/[™®©]/g, '')
+        .replace(/[:：]/g, ' ')
+        .trim()
+
+      const games = await searchGames(normalizedName, 10)
+
+      // 정확한 매칭 찾기
+      for (const game of games) {
+        const igdbName = game.name.toLowerCase().replace(/[™®©:：]/g, '').trim()
+        const searchName = normalizedName.toLowerCase()
+
+        if (igdbName === searchName || igdbName.includes(searchName) || searchName.includes(igdbName)) {
+          console.log(`✅ Found by name: ${steamName} → ${game.name} (IGDB ${game.id})`)
+          return game.id
+        }
+      }
+
+      // 첫 번째 결과 사용 (비슷한 이름)
       if (games.length > 0) {
-        // 가장 유사한 게임 반환 (첫 번째 결과)
+        console.log(`⚠️ Using first result: ${steamName} → ${games[0].name} (IGDB ${games[0].id})`)
         return games[0].id
       }
     }
 
+    console.log(`❌ Not found: ${steamName} (Steam ${steamAppId})`)
     return null
   } catch (error) {
     console.error(`Failed to find IGDB game for Steam ${steamAppId}:`, error)
@@ -105,30 +124,83 @@ export async function POST(request: NextRequest) {
           // DB에서 게임 찾기 또는 생성
           const existingGame = await prisma.game.findUnique({
             where: { igdbId },
+            select: { id: true, coverImage: true },
           })
 
           if (existingGame) {
             // 기존 게임 업데이트
-            await prisma.game.update({
-              where: { igdbId },
-              data: {
-                hotScore,
-                hotScoreUpdatedAt: new Date(),
-              },
-            })
+            // 커버 이미지가 없으면 IGDB에서 상세 정보 가져오기
+            if (!existingGame.coverImage) {
+              const igdbGame = await getGameById(igdbId)
+              if (igdbGame) {
+                const converted = await convertIGDBGame(igdbGame)
+                await prisma.game.update({
+                  where: { igdbId },
+                  data: {
+                    title: converted.title,
+                    description: converted.description,
+                    coverImage: converted.coverImage,
+                    releaseDate: converted.releaseDate,
+                    platforms: converted.platforms,
+                    genres: converted.genres,
+                    developer: converted.developer,
+                    publisher: converted.publisher,
+                    hotScore,
+                    hotScoreUpdatedAt: new Date(),
+                  },
+                })
+              } else {
+                await prisma.game.update({
+                  where: { igdbId },
+                  data: {
+                    hotScore,
+                    hotScoreUpdatedAt: new Date(),
+                  },
+                })
+              }
+            } else {
+              await prisma.game.update({
+                where: { igdbId },
+                data: {
+                  hotScore,
+                  hotScoreUpdatedAt: new Date(),
+                },
+              })
+            }
             updatedCount++
           } else {
-            // 새 게임 생성 (기본 정보만)
-            await prisma.game.create({
-              data: {
-                title: steamName || `Steam Game ${steamAppId}`,
-                igdbId,
-                platforms: '[]',
-                genres: '[]',
-                hotScore,
-                hotScoreUpdatedAt: new Date(),
-              },
-            })
+            // 새 게임 생성 - IGDB에서 상세 정보 가져오기
+            const igdbGame = await getGameById(igdbId)
+            if (igdbGame) {
+              const converted = await convertIGDBGame(igdbGame)
+              await prisma.game.create({
+                data: {
+                  title: converted.title,
+                  description: converted.description,
+                  coverImage: converted.coverImage,
+                  releaseDate: converted.releaseDate,
+                  platforms: converted.platforms,
+                  genres: converted.genres,
+                  developer: converted.developer,
+                  publisher: converted.publisher,
+                  igdbId,
+                  hotScore,
+                  hotScoreUpdatedAt: new Date(),
+                },
+              })
+            } else {
+              // IGDB 정보 없으면 기본 정보만
+              await prisma.game.create({
+                data: {
+                  title: steamName || `Steam Game ${steamAppId}`,
+                  igdbId,
+                  platforms: '[]',
+                  genres: '[]',
+                  hotScore,
+                  hotScoreUpdatedAt: new Date(),
+                },
+              })
+            }
             createdCount++
           }
 

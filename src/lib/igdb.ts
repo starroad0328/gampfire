@@ -170,6 +170,25 @@ export async function searchGames(query: string, limit = 50) {
 }
 
 /**
+ * Search game by Steam App ID (using IGDB websites field)
+ */
+export async function searchGameBySteamId(steamAppId: number): Promise<number | null> {
+  try {
+    const body = `
+      fields id, name;
+      where websites.url ~ *"store.steampowered.com/app/${steamAppId}"*;
+      limit 1;
+    `
+
+    const games = await igdbRequest<IGDBGame[]>('games', body)
+    return games[0]?.id || null
+  } catch (error) {
+    console.error(`Failed to search IGDB by Steam ID ${steamAppId}:`, error)
+    return null
+  }
+}
+
+/**
  * Get game by ID
  */
 export async function getGameById(id: number) {
