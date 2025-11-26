@@ -5,7 +5,6 @@ import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { GameSearch } from '@/components/features/game-search'
-import { CommunitySearch } from '@/components/features/community-search'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { User, Settings, LogOut, ChevronRight } from 'lucide-react'
+import { User, Settings, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export function Header() {
@@ -23,10 +22,6 @@ export function Header() {
   const pathname = usePathname()
   const isLoading = status === 'loading'
   const [userImage, setUserImage] = useState<string | null>(null)
-  const [currentCommunity, setCurrentCommunity] = useState<{ id: string; name: string } | null>(null)
-
-  // Check if we're on a community page
-  const isOnCommunityPage = pathname?.startsWith('/communities') ?? false
 
   // Fetch latest user image when session is available
   useEffect(() => {
@@ -59,24 +54,6 @@ export function Header() {
     }
   }, [session?.user?.email])
 
-  // Fetch community info when on community page
-  useEffect(() => {
-    const communityMatch = pathname?.match(/^\/communities\/([^\/]+)/)
-    if (communityMatch) {
-      const communityId = communityMatch[1]
-      fetch(`/api/communities/${communityId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.id && data.name) {
-            setCurrentCommunity({ id: data.id, name: data.name })
-          }
-        })
-        .catch(err => console.error('Failed to fetch community:', err))
-    } else {
-      setCurrentCommunity(null)
-    }
-  }, [pathname])
-
   return (
     <header className="border-b sticky top-0 bg-background z-50">
       <div className="container mx-auto px-4 py-4">
@@ -86,32 +63,10 @@ export function Header() {
               <img src="/gampfire-logo.png?v=3" alt="GampFire" className="w-12 h-12" />
               <span className="text-2xl font-bold">GAMPFIRE</span>
             </Link>
-            {isOnCommunityPage && (
-              <>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                <Link
-                  href="/communities"
-                  className="text-xl font-semibold hover:underline whitespace-nowrap"
-                >
-                  동아리
-                </Link>
-                {currentCommunity && (
-                  <>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                    <Link
-                      href={`/communities/${currentCommunity.id}`}
-                      className="text-xl font-semibold hover:underline whitespace-nowrap text-primary"
-                    >
-                      {currentCommunity.name}
-                    </Link>
-                  </>
-                )}
-              </>
-            )}
           </div>
 
           <div className="flex-1 max-w-xl hidden md:block">
-            {isOnCommunityPage ? <CommunitySearch /> : <GameSearch />}
+            <GameSearch />
           </div>
 
           <nav className="hidden lg:flex items-center gap-6">
@@ -192,7 +147,7 @@ export function Header() {
         </div>
 
         <div className="mt-4 md:hidden">
-          {isOnCommunityPage ? <CommunitySearch /> : <GameSearch />}
+          <GameSearch />
         </div>
       </div>
     </header>

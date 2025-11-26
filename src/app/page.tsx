@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Star, Users, Sparkles } from 'lucide-react'
+import { Star, Sparkles } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { cookies } from 'next/headers'
@@ -135,32 +135,17 @@ export default async function Home() {
           <h2 className="text-3xl font-bold text-center mb-12">
             지금 바로 시작하세요
           </h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Link href="/games" className="block">
+          <div className="flex justify-center max-w-2xl mx-auto">
+            <Link href="/games" className="block w-full">
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader>
-                  <Star className="w-12 h-12 mb-4 text-primary" />
-                  <CardTitle className="text-2xl">게임 평가하러 가기</CardTitle>
+                  <Star className="w-12 h-12 mb-4 text-primary mx-auto" />
+                  <CardTitle className="text-2xl text-center">게임 평가하러 가기</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground text-center">
                     수많은 게임을 둘러보고 별점과 코멘트로 평가해보세요.
                     당신의 취향에 맞는 게임을 발견할 수 있습니다.
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/communities" className="block">
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <Users className="w-12 h-12 mb-4 text-primary" />
-                  <CardTitle className="text-2xl">동아리 (커뮤니티)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    같은 게임을 좋아하는 사람들과 함께 이야기하고 정보를 공유하세요.
-                    다양한 게임 동아리에 참여해보세요.
                   </p>
                 </CardContent>
               </Card>

@@ -11,6 +11,14 @@ interface ReviewSectionProps {
   existingReview?: {
     rating: number
     comment: string | null
+    priceRating?: number | null
+    graphicsRating?: number | null
+    controlRating?: number | null
+    directionRating?: number | null
+    storyRating?: number | null
+    soundRating?: number | null
+    volumeRating?: number | null
+    innovationRating?: number | null
   } | null
 }
 

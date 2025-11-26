@@ -53,6 +53,7 @@ RichTextEditor-backup.tsx
 MVP*.txt
 UI-디자인-가이드.md
 nul
+community-backup/
 
 # database backups
 prisma/dev.db*
