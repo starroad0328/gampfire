@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Star } from 'lucide-react'
+import { Star, Flame } from 'lucide-react'
 import { translateGenre } from '@/lib/translations'
 
 interface GameCardProps {
@@ -14,6 +14,7 @@ interface GameCardProps {
   genres: string[]
   platforms: string[]
   releaseDate?: Date | null
+  isHot?: boolean
 }
 
 export function GameCard({
@@ -25,6 +26,7 @@ export function GameCard({
   genres,
   platforms,
   releaseDate,
+  isHot,
 }: GameCardProps) {
   const linkHref = `/games/${id}`
 
@@ -44,6 +46,12 @@ export function GameCard({
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                 No Image
+              </div>
+            )}
+            {isHot && (
+              <div className="absolute top-2 left-2 bg-orange-500 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 shadow-md">
+                <Flame className="w-3 h-3" />
+                HOT
               </div>
             )}
           </div>

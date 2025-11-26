@@ -554,6 +554,141 @@ export async function getSteamReviews(steamAppId: number): Promise<{
 }
 
 /**
+ * Get Steam Top Sellers from Steam Charts / Steam Store API
+ * Returns list of Steam App IDs with their rank
+ */
+export async function getSteamTopSellers(): Promise<Array<{ appId: number; name: string; rank: number }>> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+    // Steam의 Featured Categories API에서 Top Sellers 가져오기
+    const response = await fetch(
+      'https://store.steampowered.com/api/featuredcategories?cc=kr&l=korean',
+      {
+        headers: {
+          'User-Agent': 'GAMERATE/1.0',
+        },
+        signal: controller.signal,
+      }
+    )
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      console.error(`Steam Featured Categories API error: ${response.status}`)
+      return []
+    }
+
+    const data = await response.json()
+    const results: Array<{ appId: number; name: string; rank: number }> = []
+
+    // Top Sellers 카테고리 (id: "top_sellers")
+    if (data.top_sellers?.items) {
+      data.top_sellers.items.forEach((item: any, index: number) => {
+        if (item.id && item.name) {
+          results.push({
+            appId: item.id,
+            name: item.name,
+            rank: index + 1,
+          })
+        }
+      })
+    }
+
+    console.log(`✅ Fetched ${results.length} Steam Top Sellers`)
+    return results
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn('⏱️ Steam Top Sellers API timeout')
+    } else {
+      console.error('Failed to fetch Steam Top Sellers:', error)
+    }
+    return []
+  }
+}
+
+/**
+ * Get Steam Most Played games from Steam Charts API
+ */
+export async function getSteamMostPlayed(): Promise<Array<{ appId: number; name: string; currentPlayers: number; rank: number }>> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+    // Steam Charts API (비공식이지만 안정적)
+    // 대안: Steam Web API의 ISteamChartsService (제한적)
+    const response = await fetch(
+      'https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/',
+      {
+        headers: {
+          'User-Agent': 'GAMERATE/1.0',
+        },
+        signal: controller.signal,
+      }
+    )
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      console.error(`Steam Most Played API error: ${response.status}`)
+      return []
+    }
+
+    const data = await response.json()
+    const results: Array<{ appId: number; name: string; currentPlayers: number; rank: number }> = []
+
+    if (data.response?.ranks) {
+      data.response.ranks.forEach((item: any, index: number) => {
+        if (item.appid) {
+          results.push({
+            appId: item.appid,
+            name: '', // Most Played API는 이름을 제공하지 않음
+            currentPlayers: item.concurrent_in_game || 0,
+            rank: index + 1,
+          })
+        }
+      })
+    }
+
+    console.log(`✅ Fetched ${results.length} Steam Most Played games`)
+    return results
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn('⏱️ Steam Most Played API timeout')
+    } else {
+      console.error('Failed to fetch Steam Most Played:', error)
+    }
+    return []
+  }
+}
+
+/**
+ * Calculate hot score based on Steam rankings
+ * @param topSellerRank - Rank in top sellers (1-100, null if not in list)
+ * @param mostPlayedRank - Rank in most played (1-100, null if not in list)
+ * @returns hot score (0-2, higher is hotter)
+ */
+export function calculateHotScore(
+  topSellerRank: number | null,
+  mostPlayedRank: number | null
+): number {
+  let score = 0
+
+  // Top Sellers 점수 (1등 = 1.0, 10등 = 0.1, 100등 = 0.01)
+  if (topSellerRank && topSellerRank <= 100) {
+    score += 1 / topSellerRank
+  }
+
+  // Most Played 점수 (동일한 계산)
+  if (mostPlayedRank && mostPlayedRank <= 100) {
+    score += 1 / mostPlayedRank
+  }
+
+  return score
+}
+
+/**
  * Get Steam tags from Steam Spy API
  * Steam Spy provides user-generated tags that are much more detailed than official genres
  */

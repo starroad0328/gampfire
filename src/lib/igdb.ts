@@ -186,11 +186,15 @@ export async function getGameById(id: number) {
 }
 
 /**
- * Get popular games
+ * Get popular games (최근 1년 이내 게임 우선)
  */
 export async function getPopularGames(limit = 20, offset = 0, genres?: string[]) {
   // Fetch significantly more games to ensure we get enough after filtering
   const fetchLimit = Math.min(limit * 10, 500)  // Increased to 10x, max 500
+
+  // 최근 1년 타임스탬프 계산
+  const now = Math.floor(Date.now() / 1000)
+  const oneYearAgo = now - 365 * 24 * 60 * 60
 
   // Build genre filter
   let genreFilter = ''
@@ -199,18 +203,36 @@ export async function getPopularGames(limit = 20, offset = 0, genres?: string[])
     genreFilter = ` & genres.name = (${genreNames})`
   }
 
-  const body = `
+  // 1단계: 최근 1년 이내 인기 게임 우선 조회
+  const recentBody = `
     fields name, cover.url, first_release_date, summary, genres.name, platforms.name, rating, rating_count, aggregated_rating, alternative_names.name, alternative_names.comment, websites.url, websites.category, category;
-    where rating_count > 100${genreFilter};
-    sort rating desc;
+    where rating_count > 50 & first_release_date >= ${oneYearAgo} & first_release_date <= ${now}${genreFilter};
+    sort rating_count desc;
     limit ${fetchLimit};
     offset ${offset};
   `
 
-  const games = await igdbRequest<IGDBGame[]>('games', body)
+  let games = await igdbRequest<IGDBGame[]>('games', recentBody)
+  let mainGames = filterMainGamesOnly(games)
 
-  // Filter out DLCs and editions
-  const mainGames = filterMainGamesOnly(games)
+  // 최근 게임이 부족하면 전체 인기 게임에서 보충
+  if (mainGames.length < limit) {
+    const classicBody = `
+      fields name, cover.url, first_release_date, summary, genres.name, platforms.name, rating, rating_count, aggregated_rating, alternative_names.name, alternative_names.comment, websites.url, websites.category, category;
+      where rating_count > 100${genreFilter};
+      sort rating desc;
+      limit ${fetchLimit};
+      offset ${offset};
+    `
+
+    const classicGames = await igdbRequest<IGDBGame[]>('games', classicBody)
+    const classicMainGames = filterMainGamesOnly(classicGames)
+
+    // 중복 제거하고 합치기
+    const existingIds = new Set(mainGames.map(g => g.id))
+    const additionalGames = classicMainGames.filter(g => !existingIds.has(g.id))
+    mainGames = [...mainGames, ...additionalGames]
+  }
 
   // Return only the requested limit
   return mainGames.slice(0, limit)
