@@ -3,11 +3,12 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { Calendar, Heart, Star, Gamepad2, Shield } from 'lucide-react'
+import { Calendar, Heart, Star, Gamepad2, Shield, Settings } from 'lucide-react'
 import { ProfileAvatarEditor } from '@/components/features/profile-avatar-editor'
 import { getUserOwnedGames } from '@/lib/steam'
 import { UserBadge } from '@/components/ui/user-badge'
 import { SteamLinkMessage } from '@/components/features/steam-link-message'
+import { SteamAccountSection } from '@/components/features/steam-account-section'
 
 interface ProfilePageProps {
   searchParams: Promise<{ userId?: string }>
@@ -130,6 +131,17 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 )}
               </div>
 
+              {/* Settings Button */}
+              {isOwnProfile && (
+                <Link
+                  href="/settings"
+                  className="flex items-center justify-center gap-2 w-full mb-4 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors font-medium"
+                >
+                  <Settings className="w-4 h-4" />
+                  계정 설정
+                </Link>
+              )}
+
               {/* Stats */}
               <div className="space-y-4">
                 {steamGameCount !== null && (
@@ -202,49 +214,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
             {/* Steam Account Section */}
             {isOwnProfile && (
-              <div className="bg-card border border-border rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-[#171a21] flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 1.5A8.5 8.5 0 0 1 20.5 12 8.5 8.5 0 0 1 12 20.5 8.5 8.5 0 0 1 3.5 12 8.5 8.5 0 0 1 12 3.5zm-1.03 3.47a5.53 5.53 0 0 0-5 5.47 5.48 5.48 0 0 0 4.3 5.33l2.23-3.09a2.5 2.5 0 0 1-1.2-2.11 2.48 2.48 0 0 1 2.48-2.48 2.48 2.48 0 0 1 2.48 2.48 2.48 2.48 0 0 1-2.48 2.48h-.06l-3.17 2.26a5.48 5.48 0 0 0 3.92 1.64 5.53 5.53 0 0 0 5.5-5.53 5.53 5.53 0 0 0-5.5-5.5 5.46 5.46 0 0 0-2.5.58z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground">Steam 계정</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {user.steamId ? '연동된 Steam 계정' : 'Steam 계정을 연동하세요'}
-                    </p>
-                  </div>
-                </div>
-                {user.steamId ? (
-                  <div className="p-4 bg-muted/30 rounded-lg">
-                    <p className="font-medium text-foreground mb-1">{user.steamUsername}</p>
-                    <a
-                      href={`https://steamcommunity.com/profiles/${user.steamId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-                    >
-                      Steam 프로필 보기
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Steam 계정을 연동하여 보유 게임 수를 표시하세요
-                    </p>
-                    <a
-                      href="/api/auth/steam/link"
-                      className="block w-full bg-[#171a21] hover:bg-[#2a475e] text-white text-center py-3 rounded-md font-medium transition-colors"
-                    >
-                      Steam 계정 연동하기
-                    </a>
-                  </div>
-                )}
-              </div>
+              <SteamAccountSection
+                steamId={user.steamId}
+                steamUsername={user.steamUsername}
+              />
             )}
 
             <div className="bg-card border border-border rounded-lg p-6">
