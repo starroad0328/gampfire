@@ -17,12 +17,10 @@ export default function GamesPage() {
   const [hotOffset, setHotOffset] = useState(0)
   const [popularOffset, setPopularOffset] = useState(0)
   const [recentOffset, setRecentOffset] = useState(0)
-  const [recommendedOffset, setRecommendedOffset] = useState(0)
   const [loading, setLoading] = useState(false)
   const [hasMoreHot, setHasMoreHot] = useState(true)
   const [hasMorePopular, setHasMorePopular] = useState(true)
   const [hasMoreRecent, setHasMoreRecent] = useState(true)
-  const [hasMoreRecommended, setHasMoreRecommended] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showGenreCircle, setShowGenreCircle] = useState(false)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
@@ -37,7 +35,7 @@ export default function GamesPage() {
       let res: Response
 
       if (type === 'recommended') {
-        res = await fetch(`/api/games/recommended?offset=${offset}&limit=25`)
+        res = await fetch(`/api/games/recommended`)
       } else if (type === 'hot') {
         res = await fetch(`/api/games/hot?offset=${offset}&limit=25`)
       } else {
@@ -88,13 +86,7 @@ export default function GamesPage() {
         setRecentOffset(offset + 25)
         setHasMoreRecent(data.hasMore)
       } else if (type === 'recommended') {
-        setRecommendedGames(prev => {
-          const existingIds = new Set(prev.map(g => g.id))
-          const newGames = data.games.filter((g: any) => !existingIds.has(g.id))
-          return [...prev, ...newGames]
-        })
-        setRecommendedOffset(offset + 25)
-        setHasMoreRecommended(data.hasMore)
+        setRecommendedGames(data.games)
       }
     } catch (error) {
       console.error('Failed to load games:', error)
@@ -134,8 +126,6 @@ export default function GamesPage() {
             loadGames('popular', popularOffset, selectedGenres)
           } else if (activeTab === 'recent' && hasMoreRecent) {
             loadGames('recent', recentOffset, selectedGenres)
-          } else if (activeTab === 'recommended' && hasMoreRecommended) {
-            loadGames('recommended', recommendedOffset)
           }
         }
       },
@@ -147,7 +137,7 @@ export default function GamesPage() {
     }
 
     return () => observer.disconnect()
-  }, [activeTab, loading, hasMoreHot, hasMorePopular, hasMoreRecent, hasMoreRecommended, hotOffset, popularOffset, recentOffset, recommendedOffset, selectedGenres, loadGames])
+  }, [activeTab, loading, hasMoreHot, hasMorePopular, hasMoreRecent, hotOffset, popularOffset, recentOffset, selectedGenres, loadGames])
 
   const handleGenreSelect = (genres: string[]) => {
     setSelectedGenres(genres)
@@ -156,7 +146,7 @@ export default function GamesPage() {
   const currentHasMore = activeTab === 'hot' ? hasMoreHot
     : activeTab === 'popular' ? hasMorePopular
     : activeTab === 'recent' ? hasMoreRecent
-    : hasMoreRecommended
+    : false // 추천 탭은 무한 스크롤 없음
 
   return (
     <div className="container mx-auto px-4 py-8">
