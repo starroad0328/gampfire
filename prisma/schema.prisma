@@ -42,6 +42,7 @@ model User {
   followers        Follow[]           @relation("Follower")
   following        Follow[]           @relation("Following")
   developer        Developer?
+  notifications    Notification[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -256,5 +257,25 @@ model VerificationToken {
   @@unique([email, token])
   @@index([email])
   @@index([token])
+}
+
+// Notifications
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String   // 알림을 받는 사용자
+  type        String   // FOLLOW, REVIEW, LIKE, etc.
+  message     String   // 알림 메시지
+  actorId     String?  // 알림을 발생시킨 사용자
+  gameId      String?  // 관련 게임 (있을 경우)
+  reviewId    String?  // 관련 리뷰 (있을 경우)
+  isRead      Boolean  @default(false)
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }
 

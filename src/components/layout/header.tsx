@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { User, Settings, LogOut } from 'lucide-react'
+import { User, Settings, LogOut, Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export function Header() {
@@ -22,6 +22,8 @@ export function Header() {
   const pathname = usePathname()
   const isLoading = status === 'loading'
   const [userImage, setUserImage] = useState<string | null>(null)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
 
   // Fetch latest user image when session is available
   useEffect(() => {
@@ -51,6 +53,21 @@ export function Header() {
 
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate)
+    }
+  }, [session?.user?.email])
+
+  // Fetch notifications
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetch('/api/notifications')
+        .then(res => res.json())
+        .then(data => {
+          if (data.notifications) {
+            setNotifications(data.notifications)
+            setUnreadCount(data.notifications.filter((n: any) => !n.isRead).length)
+          }
+        })
+        .catch(err => console.error('Failed to fetch notifications:', err))
     }
   }, [session?.user?.email])
 
@@ -85,7 +102,65 @@ export function Header() {
             {isLoading ? (
               <div className="h-10 w-20 bg-muted animate-pulse rounded" />
             ) : session ? (
-              <DropdownMenu>
+              <>
+                {/* Notifications Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-80" align="end">
+                    <DropdownMenuLabel>알림</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        알림이 없습니다
+                      </div>
+                    ) : (
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.slice(0, 10).map((notification) => (
+                          <DropdownMenuItem
+                            key={notification.id}
+                            className={`p-3 cursor-pointer ${!notification.isRead ? 'bg-primary/5' : ''}`}
+                            onClick={() => {
+                              // Mark as read
+                              fetch('/api/notifications', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ notificationId: notification.id }),
+                              })
+                              setNotifications(notifications.map(n =>
+                                n.id === notification.id ? { ...n, isRead: true } : n
+                              ))
+                              setUnreadCount(Math.max(0, unreadCount - 1))
+                            }}
+                          >
+                            <div className="flex flex-col gap-1">
+                              <p className="text-sm">{notification.message}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(notification.createdAt).toLocaleDateString('ko-KR', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* User Profile Dropdown */}
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
@@ -133,6 +208,7 @@ export function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             ) : (
               <>
                 <Button variant="ghost" asChild>

@@ -9,6 +9,7 @@ import { getUserOwnedGames } from '@/lib/steam'
 import { UserBadge } from '@/components/ui/user-badge'
 import { SteamLinkMessage } from '@/components/features/steam-link-message'
 import { SteamAccountSection } from '@/components/features/steam-account-section'
+import { FollowButton } from '@/components/features/follow-button'
 
 interface ProfilePageProps {
   searchParams: Promise<{ userId?: string }>
@@ -65,6 +66,27 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   // Check if viewing own profile
   const isOwnProfile = session?.user?.email === user.email
+
+  // Check if current user is following this profile
+  let isFollowing = false
+  if (session && !isOwnProfile) {
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    })
+
+    if (currentUser) {
+      const follow = await prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: currentUser.id,
+            followingId: user.id,
+          },
+        },
+      })
+      isFollowing = !!follow
+    }
+  }
 
   // Calculate stats
   const reviewsCount = user.reviews.length
@@ -143,6 +165,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 <div className="mb-4 flex items-center justify-center gap-2">
                   <Gamepad2 className="w-4 h-4 text-primary" />
                   <span className="text-sm font-medium text-foreground">{user.preferredPlatform}</span>
+                </div>
+              )}
+
+              {/* Follow Button (for other users) */}
+              {!isOwnProfile && session && (
+                <div className="mb-4">
+                  <FollowButton targetUserId={user.id} initialFollowing={isFollowing} />
                 </div>
               )}
 

@@ -100,6 +100,32 @@ export async function POST(request: NextRequest) {
           innovationRating: innovationRating || null,
         },
       })
+
+      // Create notifications for followers (only for new reviews)
+      const followers = await prisma.follow.findMany({
+        where: { followingId: session.user.id },
+        select: { followerId: true },
+      })
+
+      const game = await prisma.game.findUnique({
+        where: { id: gameId },
+        select: { title: true },
+      })
+
+      if (followers.length > 0 && game) {
+        await prisma.notification.createMany({
+          data: followers.map(f => ({
+            userId: f.followerId,
+            type: 'REVIEW',
+            message: `${session.user.name || session.user.email}님이 "${game.title}"에 평가를 남겼습니다`,
+            actorId: session.user.id,
+            gameId,
+            reviewId: review.id,
+          })),
+        })
+
+        console.log(`✅ Created ${followers.length} notifications for new review`)
+      }
     }
 
     // Update game statistics
