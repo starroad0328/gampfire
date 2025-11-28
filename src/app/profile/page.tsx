@@ -240,7 +240,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 <h2 className="text-xl font-bold text-foreground">최근 평가</h2>
                 {reviewsCount > 3 && (
                   <Link
-                    href="/profile/reviews"
+                    href={userId ? `/profile/reviews?userId=${userId}` : '/profile/reviews'}
                     className="text-sm text-primary hover:text-primary/80 font-medium"
                   >
                     모든 평가 보기 ({reviewsCount})

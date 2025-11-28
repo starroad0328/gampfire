@@ -6,41 +6,74 @@ import Link from 'next/link'
 import { Star, Heart, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 
-export default async function AllReviewsPage() {
-  const session = await getServerSession(authOptions)
+interface AllReviewsPageProps {
+  searchParams: Promise<{ userId?: string }>
+}
 
-  if (!session?.user?.email) {
+export default async function AllReviewsPage({ searchParams }: AllReviewsPageProps) {
+  const session = await getServerSession(authOptions)
+  const params = await searchParams
+  const { userId } = params
+
+  // If viewing someone else's reviews, don't require login
+  // If viewing own reviews (no userId), require login
+  if (!userId && !session?.user?.email) {
     redirect('/login')
   }
 
   // Get user with all reviews
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: {
-      reviews: {
-        include: {
-          likes: true,
-          game: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
+  let user
+  if (userId) {
+    // Viewing another user's reviews
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        reviews: {
+          include: {
+            likes: true,
+            game: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
         },
       },
-    },
-  })
+    })
 
-  if (!user) {
-    redirect('/login')
+    if (!user) {
+      redirect('/profile')
+    }
+  } else {
+    // Viewing own reviews
+    user = await prisma.user.findUnique({
+      where: { email: session!.user!.email },
+      include: {
+        reviews: {
+          include: {
+            likes: true,
+            game: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    })
+
+    if (!user) {
+      redirect('/login')
+    }
   }
 
   const reviewsCount = user.reviews.length
+  const backUrl = userId ? `/profile?userId=${userId}` : '/profile'
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <Link
-          href="/profile"
+          href={backUrl}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="w-4 h-4" />

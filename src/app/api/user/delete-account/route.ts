@@ -7,39 +7,28 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    // Check if user is admin
-    if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL) {
+    if (!session?.user?.email) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: '로그인이 필요합니다' },
         { status: 401 }
       )
     }
 
-    const { userId } = await request.json()
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      )
-    }
-
-    // Prevent deleting own account
-    const userToDelete = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true },
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
     })
 
-    if (userToDelete?.email === session.user.email) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Cannot delete your own account' },
-        { status: 400 }
+        { error: '사용자를 찾을 수 없습니다' },
+        { status: 404 }
       )
     }
 
     // Get user's reviewed games before deletion
     const userReviews = await prisma.review.findMany({
-      where: { userId },
+      where: { userId: user.id },
       select: { gameId: true },
     })
 
@@ -47,7 +36,7 @@ export async function DELETE(request: NextRequest) {
 
     // Delete user (Cascade will delete all related data: reviews, likes, etc.)
     await prisma.user.delete({
-      where: { id: userId },
+      where: { id: user.id },
     })
 
     // Recalculate statistics for affected games
@@ -68,13 +57,13 @@ export async function DELETE(request: NextRequest) {
       })
     }
 
-    console.log(`✅ Deleted user and updated ${affectedGameIds.length} games`)
+    console.log(`✅ Deleted account ${session.user.email} and updated ${affectedGameIds.length} games`)
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete user error:', error)
+    console.error('Delete account error:', error)
     return NextResponse.json(
-      { error: 'Failed to delete user' },
+      { error: '계정 삭제에 실패했습니다' },
       { status: 500 }
     )
   }
