@@ -11,6 +11,8 @@ interface SettingsTabsProps {
     username: string | null
     email: string
     image: string | null
+    bio: string | null
+    preferredPlatform: string | null
     profileVisibility: string
     reviewVisibility: string
   }

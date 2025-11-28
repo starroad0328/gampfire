@@ -47,6 +47,8 @@ export default async function SettingsPage() {
             username: user.username,
             email: user.email,
             image: user.image,
+            bio: user.bio,
+            preferredPlatform: user.preferredPlatform,
             profileVisibility: user.profileVisibility,
             reviewVisibility: user.reviewVisibility,
           }}

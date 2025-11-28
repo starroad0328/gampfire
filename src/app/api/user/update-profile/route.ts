@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, username } = body
+    const { name, username, bio, preferredPlatform } = body
 
     // Validation
     if (!name || !name.trim()) {
@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         username: username.trim(),
+        bio: bio?.trim() || null,
+        preferredPlatform: preferredPlatform || null,
       },
     })
 
@@ -86,6 +88,8 @@ export async function POST(request: NextRequest) {
       user: {
         name: updatedUser.name,
         username: updatedUser.username,
+        bio: updatedUser.bio,
+        preferredPlatform: updatedUser.preferredPlatform,
       },
     })
   } catch (error) {

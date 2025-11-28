@@ -32,6 +32,10 @@ model User {
   profileVisibility String @default("public") // public, private
   reviewVisibility  String @default("public") // public, followers, private
 
+  // 프로필 정보
+  bio               String? // 한 줄 소개
+  preferredPlatform String? // PC, PlayStation, Nintendo, Xbox, Mobile
+
   reviews          Review[]
   lists            GameList[]
   likes            ReviewLike[]

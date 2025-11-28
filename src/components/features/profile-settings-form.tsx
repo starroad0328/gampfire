@@ -11,6 +11,8 @@ interface ProfileSettingsFormProps {
     username: string | null
     email: string
     image: string | null
+    bio: string | null
+    preferredPlatform: string | null
   }
 }
 
@@ -18,6 +20,8 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
   const router = useRouter()
   const [name, setName] = useState(user.name || '')
   const [username, setUsername] = useState(user.username || '')
+  const [bio, setBio] = useState(user.bio || '')
+  const [preferredPlatform, setPreferredPlatform] = useState(user.preferredPlatform || '')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -37,6 +41,8 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
         body: JSON.stringify({
           name: name.trim(),
           username: username.trim(),
+          bio: bio.trim() || null,
+          preferredPlatform: preferredPlatform || null,
         }),
       })
 
@@ -122,6 +128,46 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
             />
             <p className="text-xs text-muted-foreground mt-1">
               영문 소문자, 숫자, 밑줄(_)만 사용 가능합니다
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="bio" className="block text-sm font-medium text-foreground mb-2">
+              한 줄 소개
+            </label>
+            <input
+              id="bio"
+              type="text"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full px-4 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="자신을 한 줄로 소개해보세요"
+              maxLength={100}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {bio.length}/100자
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="platform" className="block text-sm font-medium text-foreground mb-2">
+              대표 플랫폼
+            </label>
+            <select
+              id="platform"
+              value={preferredPlatform}
+              onChange={(e) => setPreferredPlatform(e.target.value)}
+              className="w-full px-4 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">선택 안 함</option>
+              <option value="PC">PC</option>
+              <option value="PlayStation">PlayStation</option>
+              <option value="Nintendo">Nintendo</option>
+              <option value="Xbox">Xbox</option>
+              <option value="Mobile">모바일</option>
+            </select>
+            <p className="text-xs text-muted-foreground mt-1">
+              주로 플레이하는 플랫폼을 선택하세요
             </p>
           </div>
         </div>

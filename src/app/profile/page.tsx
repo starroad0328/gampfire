@@ -131,6 +131,21 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 )}
               </div>
 
+              {/* Bio */}
+              {user.bio && (
+                <div className="mb-4 px-4 py-3 bg-muted/30 rounded-lg text-center">
+                  <p className="text-sm text-foreground">{user.bio}</p>
+                </div>
+              )}
+
+              {/* Preferred Platform */}
+              {user.preferredPlatform && (
+                <div className="mb-4 flex items-center justify-center gap-2">
+                  <Gamepad2 className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">{user.preferredPlatform}</span>
+                </div>
+              )}
+
               {/* Settings Button */}
               {isOwnProfile && (
                 <Link
