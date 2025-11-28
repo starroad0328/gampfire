@@ -161,7 +161,7 @@ export async function searchGames(query: string, limit = 50) {
   // ~ 는 대소문자 구분 없는 매칭
   // * 는 와일드카드
   const body = `
-    fields name, cover.url, first_release_date, summary, genres.name, platforms.name, involved_companies.company.name, rating, rating_count, aggregated_rating, alternative_names.name, alternative_names.comment, websites.url, websites.category, category;
+    fields name, cover.url, first_release_date, summary, genres.name, platforms.name, involved_companies.company.name, rating, rating_count, aggregated_rating, follows, alternative_names.name, alternative_names.comment, websites.url, websites.category, category;
     where name ~ *"${query}"*;
     limit ${limit};
   `
