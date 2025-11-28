@@ -116,11 +116,8 @@ export default async function Home() {
               인증 시스템으로 신뢰도 높게.
             </p>
             <div className="flex gap-4 justify-center">
-              <Button size="lg" asChild>
-                <Link href="/games">게임 둘러보기</Link>
-              </Button>
               {!session && (
-                <Button size="lg" variant="outline" asChild>
+                <Button size="lg" asChild>
                   <Link href="/signup">시작하기</Link>
                 </Button>
               )}
@@ -154,23 +151,26 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Recommended Games Section - Only for logged-in users */}
-      {session && recommendedGames.length > 0 && (
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-8 h-8 text-primary" />
-                <h2 className="text-3xl font-bold">
-                  {session.user?.name}님을 위한 추천 게임
-                </h2>
-              </div>
-              <Button variant="outline" asChild>
-                <Link href="/games">더 보기</Link>
-              </Button>
+      {/* Recommended Games Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-8 h-8 text-primary" />
+              <h2 className="text-3xl font-bold">
+                {session ? `${session.user?.name}님을 위한 추천 게임` : '추천 게임'}
+              </h2>
             </div>
+            {session && recommendedGames.length > 0 && (
+              <Button variant="outline" asChild>
+                <Link href="/games?tab=recommended">더 보기</Link>
+              </Button>
+            )}
+          </div>
+
+          {session && recommendedGames.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {recommendedGames.map((game: any) => (
+              {recommendedGames.slice(0, 4).map((game: any) => (
                 <Link
                   key={game.id}
                   href={`/games/${game.id}`}
@@ -216,9 +216,24 @@ export default async function Home() {
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className="max-w-md mx-auto text-center">
+              <Card className="p-8">
+                <CardContent className="space-y-4">
+                  <Sparkles className="w-16 h-16 text-muted-foreground mx-auto" />
+                  <h3 className="text-xl font-semibold">로그인이 필요합니다</h3>
+                  <p className="text-muted-foreground">
+                    회원가입하고 게임을 평가하면 당신의 취향에 맞는 게임을 추천해드립니다.
+                  </p>
+                  <Button asChild className="w-full">
+                    <Link href="/login">로그인하기</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   )
 }
