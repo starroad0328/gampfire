@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSteamTopSellers, getSteamMostPlayed, calculateHotScore } from '@/lib/steam'
+import { getSteamTopSellers, getSteamMostPlayed, calculateHotScore, getCurrentPlayers, getSteamKoreanName } from '@/lib/steam'
 import { searchGames, getGameById, convertIGDBGame, searchGameBySteamId } from '@/lib/igdb'
 
 // 배치 작업 보안을 위한 시크릿 키 (환경 변수로 설정)
@@ -28,21 +28,31 @@ async function findIgdbGameBySteamId(steamAppId: number, steamName: string): Pro
 
       const games = await searchGames(normalizedName, 10)
 
-      // 정확한 매칭 찾기
+      // 정확한 매칭 찾기 (완전 일치만 허용)
       for (const game of games) {
         const igdbName = game.name.toLowerCase().replace(/[™®©:：]/g, '').trim()
         const searchName = normalizedName.toLowerCase()
 
-        if (igdbName === searchName || igdbName.includes(searchName) || searchName.includes(igdbName)) {
-          console.log(`✅ Found by name: ${steamName} → ${game.name} (IGDB ${game.id})`)
+        // 완전히 일치하는 경우만
+        if (igdbName === searchName) {
+          console.log(`✅ Found by name (exact): ${steamName} → ${game.name} (IGDB ${game.id})`)
           return game.id
         }
       }
 
-      // 첫 번째 결과 사용 (비슷한 이름)
-      if (games.length > 0) {
-        console.log(`⚠️ Using first result: ${steamName} → ${games[0].name} (IGDB ${games[0].id})`)
-        return games[0].id
+      // Fallback: 매우 비슷한 이름 (80% 이상 일치)
+      for (const game of games) {
+        const igdbName = game.name.toLowerCase().replace(/[™®©:：]/g, '').trim()
+        const searchName = normalizedName.toLowerCase()
+
+        // Levenshtein distance 대신 단순 길이 비교
+        const longer = Math.max(igdbName.length, searchName.length)
+        const shorter = Math.min(igdbName.length, searchName.length)
+
+        if (shorter / longer >= 0.8 && (igdbName.includes(searchName) || searchName.includes(igdbName))) {
+          console.log(`⚠️ Found by name (fuzzy): ${steamName} → ${game.name} (IGDB ${game.id})`)
+          return game.id
+        }
       }
     }
 
@@ -56,11 +66,15 @@ async function findIgdbGameBySteamId(steamAppId: number, steamName: string): Pro
 
 export async function POST(request: NextRequest) {
   try {
-    // 보안 체크
+    // 보안 체크 - Vercel Cron Job 또는 Bearer 토큰
     const authHeader = request.headers.get('authorization')
+    const cronSecret = request.headers.get('x-vercel-cron-secret')
     const providedSecret = authHeader?.replace('Bearer ', '')
 
-    if (providedSecret !== BATCH_SECRET) {
+    const isVercelCron = cronSecret === process.env.CRON_SECRET
+    const isValidToken = providedSecret === BATCH_SECRET
+
+    if (!isVercelCron && !isValidToken) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -83,9 +97,12 @@ export async function POST(request: NextRequest) {
       topSellerMap.set(item.appId, item.rank)
     })
 
-    const mostPlayedMap = new Map<number, number>()
+    const mostPlayedMap = new Map<number, { rank: number; currentPlayers: number }>()
     mostPlayed.forEach(item => {
-      mostPlayedMap.set(item.appId, item.rank)
+      mostPlayedMap.set(item.appId, {
+        rank: item.rank,
+        currentPlayers: item.currentPlayers,
+      })
     })
 
     // 3. 모든 Steam App ID 수집 (중복 제거)
@@ -101,21 +118,37 @@ export async function POST(request: NextRequest) {
     let createdCount = 0
     const errors: string[] = []
 
-    // Steam 이름 매핑 (Top Sellers에서 가져옴)
+    // Steam 이름 매핑 (Top Sellers + Most Played)
     const steamNameMap = new Map<number, string>()
     topSellers.forEach(item => {
       steamNameMap.set(item.appId, item.name)
+    })
+    mostPlayed.forEach(item => {
+      if (item.name && !steamNameMap.has(item.appId)) {
+        steamNameMap.set(item.appId, item.name)
+      }
     })
 
     for (const steamAppId of allSteamAppIds) {
       try {
         const topSellerRank = topSellerMap.get(steamAppId) || null
-        const mostPlayedRank = mostPlayedMap.get(steamAppId) || null
+        const mostPlayedData = mostPlayedMap.get(steamAppId)
+        const mostPlayedRank = mostPlayedData?.rank || null
         const hotScore = calculateHotScore(topSellerRank, mostPlayedRank)
 
         if (hotScore === 0) continue // 점수가 없으면 스킵
 
-        const steamName = steamNameMap.get(steamAppId) || ''
+        // Steam 게임 이름 가져오기 (없으면 Steam API에서 조회)
+        let steamName = steamNameMap.get(steamAppId) || ''
+        if (!steamName) {
+          steamName = await getSteamKoreanName(steamAppId) || ''
+          if (steamName) {
+            steamNameMap.set(steamAppId, steamName)
+          }
+        }
+
+        // Steam 동시 접속자 수 (Most Played에서 가져온 값, 없으면 API 호출)
+        const currentPlayers = mostPlayedData?.currentPlayers || await getCurrentPlayers(steamAppId) || 0
 
         // IGDB 게임 ID 찾기
         const igdbId = await findIgdbGameBySteamId(steamAppId, steamName)
@@ -147,6 +180,8 @@ export async function POST(request: NextRequest) {
                     publisher: converted.publisher,
                     hotScore,
                     hotScoreUpdatedAt: new Date(),
+                    currentPlayers,
+                    playersUpdatedAt: new Date(),
                   },
                 })
               } else {
@@ -155,6 +190,8 @@ export async function POST(request: NextRequest) {
                   data: {
                     hotScore,
                     hotScoreUpdatedAt: new Date(),
+                    currentPlayers,
+                    playersUpdatedAt: new Date(),
                   },
                 })
               }
@@ -164,6 +201,8 @@ export async function POST(request: NextRequest) {
                 data: {
                   hotScore,
                   hotScoreUpdatedAt: new Date(),
+                  currentPlayers,
+                  playersUpdatedAt: new Date(),
                 },
               })
             }
@@ -186,6 +225,8 @@ export async function POST(request: NextRequest) {
                   igdbId,
                   hotScore,
                   hotScoreUpdatedAt: new Date(),
+                  currentPlayers,
+                  playersUpdatedAt: new Date(),
                 },
               })
             } else {
@@ -198,13 +239,15 @@ export async function POST(request: NextRequest) {
                   genres: '[]',
                   hotScore,
                   hotScoreUpdatedAt: new Date(),
+                  currentPlayers,
+                  playersUpdatedAt: new Date(),
                 },
               })
             }
             createdCount++
           }
 
-          console.log(`✅ Updated ${steamName || steamAppId}: hotScore=${hotScore.toFixed(3)}`)
+          console.log(`✅ Updated ${steamName || steamAppId}: hotScore=${hotScore.toFixed(3)}, players=${currentPlayers}`)
         }
       } catch (error) {
         const errorMsg = `Failed to process Steam ${steamAppId}: ${error}`

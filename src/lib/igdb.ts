@@ -174,14 +174,34 @@ export async function searchGames(query: string, limit = 50) {
  */
 export async function searchGameBySteamId(steamAppId: number): Promise<number | null> {
   try {
+    // 정확한 Steam App ID 매칭을 위해 websites 정보 포함
     const body = `
-      fields id, name;
+      fields id, name, websites.url;
       where websites.url ~ *"store.steampowered.com/app/${steamAppId}"*;
-      limit 1;
+      limit 10;
     `
 
     const games = await igdbRequest<IGDBGame[]>('games', body)
-    return games[0]?.id || null
+
+    // 정확히 매칭되는 게임만 선택
+    for (const game of games) {
+      if (game.websites) {
+        for (const website of game.websites) {
+          const url = website.url || ''
+          // 정확한 매칭 확인: /app/730/ 또는 /app/730? 또는 /app/730 (URL 끝)
+          const exactMatch =
+            url.includes(`/app/${steamAppId}/`) ||
+            url.includes(`/app/${steamAppId}?`) ||
+            url.endsWith(`/app/${steamAppId}`)
+
+          if (exactMatch) {
+            return game.id
+          }
+        }
+      }
+    }
+
+    return null
   } catch (error) {
     console.error(`Failed to search IGDB by Steam ID ${steamAppId}:`, error)
     return null

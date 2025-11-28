@@ -76,6 +76,8 @@ model Game {
   // Steam 인기도 (배치 작업으로 업데이트)
   hotScore        Float    @default(0)  // Steam Top Sellers/Most Played 기반 인기 점수
   hotScoreUpdatedAt DateTime?           // 마지막 업데이트 시간
+  currentPlayers  Int      @default(0)  // Steam 동시 접속자 수
+  playersUpdatedAt DateTime?            // 동시 접속자 수 업데이트 시간
 
   reviews         Review[]
   listItems       ListItem[]
@@ -88,6 +90,7 @@ model Game {
   @@index([averageRating])
   @@index([releaseDate])
   @@index([hotScore])
+  @@index([currentPlayers])
 }
 
 // Review model

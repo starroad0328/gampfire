@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 /**
- * Get hot games based on Steam popularity (hot_score)
- * These are games currently trending on Steam (Top Sellers + Most Played)
+ * Get hot games based on Steam concurrent players
+ * These are games with highest current player count on Steam
  */
 export async function GET(request: NextRequest) {
   try {
@@ -11,13 +11,13 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0')
     const limit = parseInt(searchParams.get('limit') || '25')
 
-    // DB에서 hot_score가 높은 게임들 조회
+    // DB에서 동시 접속자 수가 높은 게임들 조회
     const hotGames = await prisma.game.findMany({
       where: {
-        hotScore: { gt: 0 },
+        currentPlayers: { gt: 0 },
         igdbId: { not: null },
       },
-      orderBy: { hotScore: 'desc' },
+      orderBy: { currentPlayers: 'desc' },
       skip: offset,
       take: limit,
       select: {
@@ -30,15 +30,15 @@ export async function GET(request: NextRequest) {
         releaseDate: true,
         averageRating: true,
         totalReviews: true,
-        hotScore: true,
-        hotScoreUpdatedAt: true,
+        currentPlayers: true,
+        playersUpdatedAt: true,
       },
     })
 
     // 다음 페이지 존재 여부 확인
     const totalCount = await prisma.game.count({
       where: {
-        hotScore: { gt: 0 },
+        currentPlayers: { gt: 0 },
         igdbId: { not: null },
       },
     })
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       releaseDate: game.releaseDate,
       averageRating: game.averageRating,
       totalReviews: game.totalReviews,
-      hotScore: game.hotScore,
+      currentPlayers: game.currentPlayers,
       isHot: true, // 프론트엔드에서 🔥 뱃지 표시용
     }))
 

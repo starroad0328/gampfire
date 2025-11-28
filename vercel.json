@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/batch/update-hot-scores",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
