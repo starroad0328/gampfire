@@ -213,7 +213,7 @@ export default function OnboardingPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">취향 평가</h1>
+              <h1 className="text-2xl font-bold">점화 세팅</h1>
               <p className="text-sm text-muted-foreground">
                 {totalReviewCount >= 10
                   ? '게임에 평점을 매겨주세요. 평점을 많이 매길수록 더 정확한 추천을 받을 수 있어요.'
