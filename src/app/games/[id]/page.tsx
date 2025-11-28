@@ -109,7 +109,7 @@ export default function GamePage({ params }: GamePageProps) {
     </div>
   }
 
-  const { game, steamData, trailer, userReview, expertStats, userStats } = gameData
+  const { game, steamData, trailer, userReview } = gameData
 
   return (
     <div className="min-h-screen bg-background">
@@ -241,46 +241,17 @@ export default function GamePage({ params }: GamePageProps) {
             {/* Rating Stats */}
             <div className="bg-muted/30 rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">평점 통계</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Verified Rating */}
-                <div className="space-y-3 pb-3 border-r border-border pr-3">
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground mb-2">인증된 평가 ✓</p>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Star className="w-5 h-5 fill-blue-500 text-blue-500" />
-                      <span className="text-2xl font-bold">
-                        {expertStats?.averageRating > 0 ? expertStats.averageRating.toFixed(1) : 'N/A'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {expertStats?.count || 0}개 평가
-                    </p>
-                  </div>
+              <div className="text-center mb-4">
+                <p className="text-xs text-muted-foreground mb-2">전체 평균</p>
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <Star className="w-6 h-6 fill-orange-500 text-orange-500" />
+                  <span className="text-3xl font-bold">
+                    {game.averageRating > 0 ? game.averageRating.toFixed(1) : 'N/A'}
+                  </span>
                 </div>
-
-                {/* Unverified Rating */}
-                <div className="space-y-3 pl-3">
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground mb-2">일반 평가</p>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Star className="w-5 h-5 fill-orange-500 text-orange-500" />
-                      <span className="text-2xl font-bold">
-                        {userStats?.averageRating > 0 ? userStats.averageRating.toFixed(1) : 'N/A'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {userStats?.count || 0}개 평가
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Stats */}
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">전체 리뷰</span>
-                  <span className="font-semibold">{game.totalReviews}개</span>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  {game.totalReviews}개 평가
+                </p>
               </div>
 
               {/* Metacritic Score */}
@@ -472,9 +443,9 @@ export default function GamePage({ params }: GamePageProps) {
           <h2 className="text-xl font-bold mb-6">
             리뷰 ({game.totalReviews})
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 추천 평가 */}
-            <div className="lg:col-span-2">
+            <div>
               <h3 className="text-lg font-semibold mb-4 text-foreground">추천 평가</h3>
               <div className="space-y-4">
                 {game.reviews && game.reviews.length > 0 ? (
@@ -502,11 +473,7 @@ export default function GamePage({ params }: GamePageProps) {
                             </div>
                           )}
                           <div className="flex items-center gap-1">
-                            <Star className={`w-4 h-4 ${
-                              review.user.role === 'expert' || review.user.role === 'influencer'
-                                ? 'fill-blue-500 text-blue-500'
-                                : 'fill-orange-500 text-orange-500'
-                            }`} />
+                            <Star className="w-4 h-4 fill-orange-500 text-orange-500" />
                             <span className="text-sm font-bold">{review.rating.toFixed(1)}</span>
                           </div>
                         </div>
@@ -659,191 +626,8 @@ export default function GamePage({ params }: GamePageProps) {
               </div>
             </div>
 
-            {/* 인증된 평가 */}
-            <div className="lg:col-span-1">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">인증된 평가</h3>
-              <div className="space-y-4">
-                {game.reviews && game.reviews.filter((r: any) => r.user.role === 'expert' || r.user.role === 'influencer').length > 0 ? (
-                  [...game.reviews]
-                    .filter((review: any) => review.user.role === 'expert' || review.user.role === 'influencer')
-                    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .slice(0, 3)
-                    .map((review: any) => (
-                      <div key={review.id} className="bg-muted/30 rounded-lg p-5">
-                        {/* Recommendation Badge - Top */}
-                        <div className="flex items-center gap-2 mb-3">
-                          {review.rating > 3 ? (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 rounded-md text-blue-500">
-                              <ThumbsUp className="w-4 h-4" />
-                              <span className="text-sm font-bold">추천</span>
-                            </div>
-                          ) : review.rating >= 2.5 ? (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-500/10 border border-gray-500/30 rounded-md text-gray-500">
-                              <Minus className="w-4 h-4" />
-                              <span className="text-sm font-bold">보통</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/30 rounded-md text-red-500">
-                              <ThumbsDown className="w-4 h-4" />
-                              <span className="text-sm font-bold">비추천</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-blue-500 text-blue-500" />
-                            <span className="text-sm font-bold">{review.rating.toFixed(1)}</span>
-                          </div>
-                        </div>
-
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            {/* Profile Picture */}
-                            <Link href={`/profile?userId=${review.user.id}`}>
-                              <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted hover:ring-2 hover:ring-primary transition-all">
-                                {review.user.image ? (
-                                  <Image
-                                    src={review.user.image}
-                                    alt={review.user.name || review.user.username}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
-                                    {(review.user.name || review.user.username || 'U')[0].toUpperCase()}
-                                  </div>
-                                )}
-                              </div>
-                            </Link>
-
-                            {/* Username */}
-                            <div className="flex items-center gap-2">
-                              <Link
-                                href={`/profile?userId=${review.user.id}`}
-                                className="font-semibold hover:text-primary transition-colors"
-                              >
-                                {review.user.name || review.user.username}
-                              </Link>
-                              <UserBadge role={review.user.role} size="sm" />
-                            </div>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString('ko-KR', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
-                          </span>
-                        </div>
-
-                        {/* Review Content */}
-                        {review.comment && (
-                          <p className="text-sm leading-relaxed mb-4 whitespace-pre-wrap">{review.comment}</p>
-                        )}
-
-                        {/* Detailed Ratings */}
-                        {(review.priceRating || review.graphicsRating || review.controlRating || review.directionRating ||
-                          review.storyRating || review.soundRating || review.volumeRating || review.innovationRating) && (
-                          <div className="mb-4">
-                            <div className="flex flex-wrap gap-3 text-xs">
-                              {review.priceRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">💰 가격</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.priceRating % 1 === 0 ? review.priceRating : review.priceRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                              {review.graphicsRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">🎨 그래픽</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.graphicsRating % 1 === 0 ? review.graphicsRating : review.graphicsRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                              {review.controlRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">🎮 조작감</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.controlRating % 1 === 0 ? review.controlRating : review.controlRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                              {review.directionRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">🎬 연출</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.directionRating % 1 === 0 ? review.directionRating : review.directionRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                              {review.storyRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">📖 스토리</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.storyRating % 1 === 0 ? review.storyRating : review.storyRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                              {review.soundRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">🎵 OST</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.soundRating % 1 === 0 ? review.soundRating : review.soundRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                              {review.volumeRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">📦 볼륨</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.volumeRating % 1 === 0 ? review.volumeRating : review.volumeRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                              {review.innovationRating && (
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded">
-                                  <span className="text-muted-foreground">💡 혁신성</span>
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium">{review.innovationRating % 1 === 0 ? review.innovationRating : review.innovationRating.toFixed(1)}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Like/Dislike Section */}
-                        <div className="border-t border-border pt-3">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleVoteReview(review.id, 'like')}
-                              className={`flex items-center gap-1.5 px-4 py-2 rounded text-sm transition-colors ${
-                                reviewVotes.get(review.id) === 'like'
-                                  ? 'bg-orange-500 text-white hover:bg-orange-600'
-                                  : 'bg-muted/50 hover:bg-muted'
-                              }`}
-                            >
-                              <ThumbsUp className="w-4 h-4" />
-                              추천 {review.likesCount > 0 && <span className="ml-1 font-medium">{review.likesCount}</span>}
-                            </button>
-                            <button
-                              onClick={() => handleVoteReview(review.id, 'dislike')}
-                              className={`flex items-center gap-1.5 px-4 py-2 rounded text-sm transition-colors ${
-                                reviewVotes.get(review.id) === 'dislike'
-                                  ? 'bg-red-600 text-white hover:bg-red-700'
-                                  : 'bg-muted/50 hover:bg-muted'
-                              }`}
-                            >
-                              <ThumbsDown className="w-4 h-4" />
-                              비추천
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                ) : (
-                  <div className="bg-muted/30 rounded-lg p-8 text-center text-muted-foreground">
-                    아직 인증된 평가가 없습니다.
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* 최신 평가 */}
-            <div className="lg:col-span-1">
+            <div>
               <h3 className="text-lg font-semibold mb-4 text-foreground">최신 평가</h3>
               <div className="space-y-4">
                 {game.reviews && game.reviews.length > 0 ? (
@@ -871,11 +655,7 @@ export default function GamePage({ params }: GamePageProps) {
                       </div>
                     )}
                     <div className="flex items-center gap-1">
-                      <Star className={`w-4 h-4 ${
-                        review.user.role === 'expert' || review.user.role === 'influencer'
-                          ? 'fill-blue-500 text-blue-500'
-                          : 'fill-orange-500 text-orange-500'
-                      }`} />
+                      <Star className="w-4 h-4 fill-orange-500 text-orange-500" />
                       <span className="text-sm font-bold">{review.rating.toFixed(1)}</span>
                     </div>
                   </div>

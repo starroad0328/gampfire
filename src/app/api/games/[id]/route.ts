@@ -87,9 +87,10 @@ export async function GET(
     const steamId = extractSteamId(igdbGame)
     let steamData = null
     let steamMetacriticScore: number | null = null
+    let steamTags: string[] | null = null
 
     if (steamId) {
-      const [currentPlayers, priceInfo, metacritic, reviews, description, steamTags] = await Promise.all([
+      const [currentPlayers, priceInfo, metacritic, reviews, description, tags] = await Promise.all([
         getCurrentPlayers(steamId),
         getSteamPriceInfo(steamId),
         getSteamMetacritic(steamId),
@@ -97,6 +98,8 @@ export async function GET(
         getSteamGameDescription(steamId),
         getSteamTags(steamId),
       ])
+
+      steamTags = tags
 
       // Transform price info to match frontend expectations
       let transformedPriceInfo = null
@@ -162,14 +165,14 @@ export async function GET(
                 comment: true,
                 createdAt: true,
                 likesCount: true,
-                priceValue: true,
-                graphics: true,
-                controls: true,
-                direction: true,
-                story: true,
-                ost: true,
-                contentVolume: true,
-                innovation: true,
+                priceRating: true,
+                graphicsRating: true,
+                controlRating: true,
+                directionRating: true,
+                storyRating: true,
+                soundRating: true,
+                volumeRating: true,
+                innovationRating: true,
                 user: {
                   select: {
                     id: true,
@@ -214,6 +217,14 @@ export async function GET(
                   comment: true,
                   createdAt: true,
                   likesCount: true,
+                  priceRating: true,
+                  graphicsRating: true,
+                  controlRating: true,
+                  directionRating: true,
+                  storyRating: true,
+                  soundRating: true,
+                  volumeRating: true,
+                  innovationRating: true,
                   user: {
                     select: {
                       id: true,
@@ -266,6 +277,14 @@ export async function GET(
               comment: true,
               createdAt: true,
               likesCount: true,
+              priceRating: true,
+              graphicsRating: true,
+              controlRating: true,
+              directionRating: true,
+              storyRating: true,
+              soundRating: true,
+              volumeRating: true,
+              innovationRating: true,
               user: {
                 select: {
                   id: true,
@@ -348,38 +367,6 @@ export async function GET(
       }
     }
 
-    // Calculate verified and unverified ratings separately
-    // Verified = expert + influencer, Unverified = user
-    const allReviews = await prisma.review.findMany({
-      where: {
-        gameId: game.id,
-      },
-      include: {
-        user: {
-          select: {
-            role: true,
-          }
-        }
-      }
-    })
-
-    const verifiedReviews = allReviews.filter(r => r.user.role === 'expert' || r.user.role === 'influencer')
-    const unverifiedReviews = allReviews.filter(r => r.user.role === 'user')
-
-    const expertStats = {
-      count: verifiedReviews.length,
-      averageRating: verifiedReviews.length > 0
-        ? verifiedReviews.reduce((sum, r) => sum + r.rating, 0) / verifiedReviews.length
-        : 0
-    }
-
-    const userStats = {
-      count: unverifiedReviews.length,
-      averageRating: unverifiedReviews.length > 0
-        ? unverifiedReviews.reduce((sum, r) => sum + r.rating, 0) / unverifiedReviews.length
-        : 0
-    }
-
     // Transform reviews to include userVote field
     const transformedGame = game ? {
       ...game,
@@ -407,8 +394,6 @@ export async function GET(
       steamData,
       trailer,
       userReview,
-      expertStats,
-      userStats,
     })
   } catch (error) {
     console.error('Game fetch error:', error)
