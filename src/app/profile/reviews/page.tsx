@@ -49,7 +49,7 @@ export default async function AllReviewsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
           {/* Left Sidebar - User Profile Card */}
-          <div className="lg:sticky lg:top-4 h-fit">
+          <div className="lg:sticky lg:top-24 lg:self-start">
             <div className="bg-card border border-border rounded-lg p-6">
               {/* Profile Picture */}
               <div className="flex flex-col items-center mb-6">

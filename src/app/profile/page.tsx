@@ -92,7 +92,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar - Profile Info */}
           <div className="lg:w-80 flex-shrink-0">
-            <div className="bg-card border border-border rounded-lg p-6 sticky top-4">
+            <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
               {/* Profile Picture */}
               <div className="flex flex-col items-center mb-6">
                 <div className="mb-4">
