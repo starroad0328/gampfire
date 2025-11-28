@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { UserBadge } from '@/components/ui/user-badge'
-import { Search, X, Users, Shield, Star, TrendingUp, ArrowUpDown } from 'lucide-react'
+import { Search, X, Users, Shield, Star, TrendingUp, ArrowUpDown, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface UserData {
@@ -116,6 +116,43 @@ export default function AdminUsersPage() {
       toast({
         title: "Error",
         description: 'Error updating role',
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`정말로 "${userName}" 계정을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 사용자의 모든 리뷰와 데이터가 삭제됩니다.`)) {
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/users/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({
+          title: "Error",
+          description: data.error || 'Failed to delete user',
+          variant: "destructive",
+        })
+        return
+      }
+
+      setUsers(users.filter(u => u.id !== userId))
+      toast({
+        title: "Success",
+        description: '사용자가 삭제되었습니다',
+      })
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: 'Error deleting user',
         variant: "destructive",
       })
     }
@@ -344,6 +381,7 @@ export default function AdminUsersPage() {
                   </Button>
                 </TableHead>
                 <TableHead>역할 변경</TableHead>
+                <TableHead>작업</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -379,6 +417,16 @@ export default function AdminUsersPage() {
                         <SelectItem value="influencer">인플루언서</SelectItem>
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteUser(user.id, user.name || user.email)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
