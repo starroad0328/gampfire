@@ -38,11 +38,6 @@ export async function GET(
       where: { igdbId },
       include: {
         reviews: {
-          where: {
-            comment: {
-              not: null,
-            },
-          },
           take: 5,
           orderBy: { createdAt: 'desc' },
           select: {
@@ -152,11 +147,6 @@ export async function GET(
           data: gameData,
           include: {
             reviews: {
-              where: {
-                comment: {
-                  not: null,
-                },
-              },
               take: 5,
               orderBy: { createdAt: 'desc' },
               select: {
@@ -204,11 +194,6 @@ export async function GET(
             where: { igdbId },
             include: {
               reviews: {
-                where: {
-                  comment: {
-                    not: null,
-                  },
-                },
                 take: 5,
                 orderBy: { createdAt: 'desc' },
                 select: {
@@ -264,11 +249,6 @@ export async function GET(
         data: { metacriticScore: steamData.metacritic.score },
         include: {
           reviews: {
-            where: {
-              comment: {
-                not: null,
-              },
-            },
             take: 5,
             orderBy: { createdAt: 'desc' },
             select: {
