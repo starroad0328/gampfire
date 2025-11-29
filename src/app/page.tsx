@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Star, Sparkles } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { cookies } from 'next/headers'
-import { getPopularGames as getPopularGamesAPI, convertIGDBGame } from '@/lib/igdb'
+import { getPopularGames as getPopularGamesAPI } from '@/lib/igdb'
+import { getRecommendedGamesForUser } from '@/lib/recommendations'
 
 async function getPopularGames() {
   try {
@@ -25,36 +25,12 @@ async function getPopularGames() {
   }
 }
 
-async function getRecommendedGames() {
+async function getRecommendedGames(userId: string) {
   try {
-    // Vercel에서는 VERCEL_URL을 자동으로 제공
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-
-    // Get session token for authenticated request
-    const cookieStore = await cookies()
-    const sessionToken = cookieStore.get('next-auth.session-token') || cookieStore.get('__Secure-next-auth.session-token')
-
-    if (!sessionToken) {
-      return []
-    }
-
-    const response = await fetch(`${baseUrl}/api/games/recommended?limit=4`, {
-      cache: 'no-store',
-      headers: {
-        Cookie: `${sessionToken.name}=${sessionToken.value}`
-      }
-    })
-
-    if (!response.ok) {
-      console.error('❌ Recommended games API failed:', response.status)
-      return []
-    }
-
-    const data = await response.json()
-    const games = data.games || []
-    console.log('✅ Loaded', games.length, 'recommended games from API')
-
+    // 직접 함수 호출 (fetch 대신)
+    const result = await getRecommendedGamesForUser(userId, 10)
+    const games = result.games || []
+    console.log('✅ Loaded', games.length, 'recommended games')
     return games
   } catch (error) {
     console.error('❌ Failed to fetch recommended games:', error)
@@ -65,7 +41,7 @@ async function getRecommendedGames() {
 export default async function Home() {
   const games = await getPopularGames()
   const session = await getServerSession(authOptions)
-  const recommendedGames = session ? await getRecommendedGames() : []
+  const recommendedGames = session?.user?.id ? await getRecommendedGames(session.user.id) : []
   console.log('🎮 Loaded games for background:', games.length)
   console.log('✨ Loaded recommended games:', recommendedGames.length)
 
