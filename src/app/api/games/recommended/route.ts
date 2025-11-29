@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     // 평가한 게임이 없으면 인기 게임 반환
     if (userReviews.length === 0) {
       console.log('[API] No reviews found, returning popular games')
-      const games = await getPopularGames(limit, offset)
+      const games = await getPopularGames(limit)
 
       const convertedGames = await Promise.all(
         games.map(async (game) => {
