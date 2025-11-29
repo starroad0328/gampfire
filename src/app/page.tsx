@@ -6,29 +6,18 @@ import { Star, Sparkles } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { cookies } from 'next/headers'
+import { getPopularGames as getPopularGamesAPI, convertIGDBGame } from '@/lib/igdb'
 
 async function getPopularGames() {
   try {
-    // Vercel에서는 VERCEL_URL을 자동으로 제공
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-    const response = await fetch(`${baseUrl}/api/games/list?type=popular&limit=60`, {
-      cache: 'no-store'
-    })
-
-    if (!response.ok) {
-      console.error('❌ Popular games API failed:', response.status)
-      return []
-    }
-
-    const data = await response.json()
-    const games = data.games || []
-    console.log('✅ Loaded', games.length, 'popular games from API')
+    // 직접 IGDB API 호출 (fetch 대신)
+    const games = await getPopularGamesAPI(60, 0)
+    console.log('✅ Loaded', games.length, 'popular games from IGDB')
 
     return games.map((game: any) => ({
-      id: game.igdbId,
-      name: game.title,
-      cover: game.coverImage,
+      id: game.id,
+      name: game.name,
+      cover: game.cover?.url ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` : null,
     }))
   } catch (error) {
     console.error('❌ Failed to fetch popular games:', error)
