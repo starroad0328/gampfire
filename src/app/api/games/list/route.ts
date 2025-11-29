@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch all game ratings from DB in a single query (배치 쿼리로 성능 개선)
     const igdbIds = games.map(game => game.id)
-    let dbGames: { igdbId: number; averageRating: number; totalReviews: number }[] = []
+    let dbGames: { igdbId: number | null; averageRating: number; totalReviews: number }[] = []
 
     try {
       dbGames = await prisma.game.findMany({
