@@ -3,7 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { Calendar, Heart, Star, Gamepad2, Shield, Settings } from 'lucide-react'
+import { Calendar, Heart, Star, Gamepad2, Shield, Settings, Users } from 'lucide-react'
 import { ProfileAvatarEditor } from '@/components/features/profile-avatar-editor'
 import { getUserOwnedGames } from '@/lib/steam'
 import { UserBadge } from '@/components/ui/user-badge'
@@ -97,6 +97,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     day: 'numeric',
   })
 
+  // Get follower and following counts
+  const followersCount = await prisma.follow.count({
+    where: { followingId: user.id },
+  })
+  const followingCount = await prisma.follow.count({
+    where: { followerId: user.id },
+  })
+
   // Get Steam game count if Steam is linked
   let steamGameCount: number | null = null
   if (user.steamId) {
@@ -188,6 +196,18 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
               {/* Stats */}
               <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-md">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">팔로워 · 팔로잉</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {followersCount.toLocaleString()} · {followingCount.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
                 {steamGameCount !== null && (
                   <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-md">
                     <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
