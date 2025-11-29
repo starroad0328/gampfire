@@ -11,7 +11,7 @@ export const authOptions: NextAuthOptions = {
         username: { label: "아이디", type: "text" },
         password: { label: "비밀번호", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials: any) {
         // Check for Steam login token
         if (credentials?.steamToken) {
           // Find the verification token

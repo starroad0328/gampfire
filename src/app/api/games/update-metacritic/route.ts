@@ -26,6 +26,12 @@ export async function POST() {
     for (const game of games) {
       try {
         // Get IGDB data to find Steam ID
+        if (!game.igdbId) {
+          console.log(`❌ No IGDB ID for: ${game.title}`)
+          errorCount++
+          continue
+        }
+
         const igdbGame = await getGameById(game.igdbId)
 
         if (!igdbGame) {

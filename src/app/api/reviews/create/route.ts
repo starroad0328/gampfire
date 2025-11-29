@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    let review
+    let review: any
 
     if (existingReview) {
       // Update existing review

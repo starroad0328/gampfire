@@ -83,7 +83,7 @@ export default async function Home() {
         {/* Background Game Covers */}
         <div className="absolute inset-0 z-0">
           <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-14 xl:grid-cols-16 gap-2 opacity-40">
-            {games.map((game, index) => (
+            {games.map((game: any, index: number) => (
               <div key={game.id} className="aspect-[3/4] relative">
                 {game.cover && (
                   <Image

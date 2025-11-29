@@ -48,7 +48,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   } else {
     // Viewing own profile
     user = await prisma.user.findUnique({
-      where: { email: session!.user!.email },
+      where: { email: session!.user!.email! },
       include: {
         reviews: {
           include: {
@@ -71,7 +71,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   let isFollowing = false
   if (session && !isOwnProfile) {
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user.email! },
       select: { id: true },
     })
 

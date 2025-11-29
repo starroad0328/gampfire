@@ -46,7 +46,7 @@ export default async function AllReviewsPage({ searchParams }: AllReviewsPagePro
   } else {
     // Viewing own reviews
     user = await prisma.user.findUnique({
-      where: { email: session!.user!.email },
+      where: { email: session!.user!.email! },
       include: {
         reviews: {
           include: {

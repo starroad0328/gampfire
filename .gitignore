@@ -58,3 +58,6 @@ community-backup/
 # database backups
 prisma/dev.db*
 prisma/migrations.backup.sqlite/
+
+.vercel
+.env*.local
