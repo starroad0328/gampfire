@@ -9,7 +9,9 @@ import { cookies } from 'next/headers'
 
 async function getPopularGames() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    // Vercel에서는 VERCEL_URL을 자동으로 제공
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
     const response = await fetch(`${baseUrl}/api/games/list?type=popular&limit=60`, {
       cache: 'no-store'
     })
@@ -36,7 +38,9 @@ async function getPopularGames() {
 
 async function getRecommendedGames() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    // Vercel에서는 VERCEL_URL을 자동으로 제공
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
     // Get session token for authenticated request
     const cookieStore = await cookies()
