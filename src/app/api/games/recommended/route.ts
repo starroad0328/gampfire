@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
 
     if (topGenres.length === 0) {
       console.log('[API] No genres found, returning popular games')
-      const games = await getPopularGames(limit, offset)
+      const games = await getPopularGames(limit)
 
       const convertedGames = await Promise.all(
         games.map(async (game) => {
