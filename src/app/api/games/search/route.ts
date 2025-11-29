@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       const igdbWithScore = newIgdbGames.map(game => {
         let score = 0
         if (game.rating_count) score += Math.log10(game.rating_count + 1) * 10 * 0.5
-        if (game.follows) score += Math.log10(game.follows + 1) * 10 * 0.3
+        if ((game as any).follows) score += Math.log10((game as any).follows + 1) * 10 * 0.3
         return { game, score }
       })
 
