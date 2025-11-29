@@ -315,7 +315,6 @@ export async function GET(request: NextRequest) {
         }
 
         recommendedGames.push({
-          igdbId: igdbGame.id,
           ...converted,
           averageRating: 0,
           totalReviews: 0,
