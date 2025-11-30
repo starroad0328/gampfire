@@ -137,7 +137,22 @@ export default async function Home() {
             )}
           </div>
 
-          {session && recommendedGames.length > 0 ? (
+          {!session ? (
+            <div className="max-w-md mx-auto text-center">
+              <Card className="p-8">
+                <CardContent className="space-y-4">
+                  <Sparkles className="w-16 h-16 text-muted-foreground mx-auto" />
+                  <h3 className="text-xl font-semibold">로그인이 필요합니다</h3>
+                  <p className="text-muted-foreground">
+                    회원가입하고 게임을 평가하면 당신의 취향에 맞는 게임을 추천해드립니다.
+                  </p>
+                  <Button asChild className="w-full">
+                    <Link href="/login">로그인하기</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          ) : recommendedGames.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {recommendedGames.slice(0, 4).map((game: any) => (
                 <Link
@@ -190,12 +205,12 @@ export default async function Home() {
               <Card className="p-8">
                 <CardContent className="space-y-4">
                   <Sparkles className="w-16 h-16 text-muted-foreground mx-auto" />
-                  <h3 className="text-xl font-semibold">로그인이 필요합니다</h3>
+                  <h3 className="text-xl font-semibold">추천할 게임이 없습니다</h3>
                   <p className="text-muted-foreground">
-                    회원가입하고 게임을 평가하면 당신의 취향에 맞는 게임을 추천해드립니다.
+                    게임을 평가하면 당신의 취향에 맞는 게임을 추천해드립니다.
                   </p>
                   <Button asChild className="w-full">
-                    <Link href="/login">로그인하기</Link>
+                    <Link href="/games">게임 평가하러 가기</Link>
                   </Button>
                 </CardContent>
               </Card>
