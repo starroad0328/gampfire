@@ -137,7 +137,7 @@ export default async function Home() {
             )}
           </div>
 
-          {!session ? (
+          {session === null || session === undefined ? (
             <div className="max-w-md mx-auto text-center">
               <Card className="p-8">
                 <CardContent className="space-y-4">
