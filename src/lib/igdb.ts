@@ -336,6 +336,14 @@ export interface IGDBGame {
     id: number
     name: string
   }>
+  themes?: Array<{
+    id: number
+    name: string
+  }>
+  keywords?: Array<{
+    id: number
+    name: string
+  }>
   platforms?: Array<{
     id: number
     name: string
@@ -425,6 +433,15 @@ export async function convertIGDBGame(
   // 한국어 제목 가져오기 (IGDB 데이터 우선, 없으면 자동 번역)
   const koreanTitle = await getKoreanTitle(igdbGame)
 
+  // Steam tags 자동 가져오기 (파라미터로 전달되지 않은 경우)
+  let tags = steamTags
+  if (!tags) {
+    const steamId = extractSteamId(igdbGame)
+    if (steamId) {
+      tags = await getSteamTags(steamId)
+    }
+  }
+
   return {
     igdbId: igdbGame.id,
     title: koreanTitle || igdbGame.name,
@@ -435,7 +452,7 @@ export async function convertIGDBGame(
       : null,
     platforms: JSON.stringify(igdbGame.platforms?.map((p) => p.name) || []),
     genres: JSON.stringify(igdbGame.genres?.map((g) => g.name) || []),
-    tags: steamTags ? JSON.stringify(steamTags) : null,
+    tags: tags ? JSON.stringify(tags) : null,
     developer: developers?.[0] || null,
     publisher: publishers?.[0] || null,
     metacriticScore: metacriticScore !== undefined
