@@ -113,7 +113,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   }
 
   // Check if user is admin
-  const isAdmin = user.email === process.env.ADMIN_EMAIL
+  const isAdmin = user.email === process.env.ADMIN_EMAIL?.trim()
 
   return (
     <div className="min-h-screen bg-background">

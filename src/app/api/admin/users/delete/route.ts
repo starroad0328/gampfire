@@ -8,7 +8,7 @@ export async function DELETE(request: NextRequest) {
     const session = await getServerSession(authOptions)
 
     // Check if user is admin
-    if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL) {
+    if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL?.trim()) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

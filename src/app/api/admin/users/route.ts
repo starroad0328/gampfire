@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 // Check if user is admin
 async function isAdmin(email: string): Promise<boolean> {
-  const adminEmail = process.env.ADMIN_EMAIL
+  const adminEmail = process.env.ADMIN_EMAIL?.trim()
   return email === adminEmail
 }
 
