@@ -3,7 +3,7 @@
  * Requires Twitch Client ID and Client Secret
  */
 
-import { getKoreanNameFromSteam } from './steam'
+import { getKoreanNameFromSteam, extractSteamId, getSteamTags } from './steam'
 
 interface IGDBToken {
   access_token: string
