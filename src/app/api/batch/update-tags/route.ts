@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getSteamTags, extractSteamId } from '@/lib/steam'
 import { getGameById } from '@/lib/igdb'
 
+export const maxDuration = 60 // 60 seconds timeout for batch operations
+
 export async function POST(request: Request) {
   try {
     console.log('[Update Tags] Starting batch update...')
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
           _count: 'desc'
         }
       },
-      take: 50 // Limit to 50 most reviewed games
+      take: 10 // Limit to 10 games per batch to avoid timeout
     })
 
     console.log(`[Update Tags] Found ${gamesWithoutTags.length} games without tags`)
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
         updated++
 
         // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 200))
 
       } catch (error) {
         console.error(`  ❌ Error processing ${game.title}:`, error)
