@@ -30,9 +30,9 @@ export async function sendVerificationEmail(
   }
 
   const mailOptions = {
-    from: `"GAMERATE" <${process.env.EMAIL_USER}>`,
+    from: `"겜프파이어" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: '[GAMERATE] 이메일 인증 코드',
+    subject: '[겜프파이어] 이메일 인증 코드',
     html: `
       <!DOCTYPE html>
       <html>
@@ -102,11 +102,11 @@ export async function sendVerificationEmail(
         <body>
           <div class="container">
             <div class="header">
-              <div class="logo">🎮 GAMERATE</div>
+              <div class="logo">🔥 겜프파이어</div>
               <h2 style="color: #333; margin-top: 10px;">이메일 인증</h2>
             </div>
 
-            <p>GAMERATE에 가입해 주셔서 감사합니다!</p>
+            <p>겜프파이어에 가입해 주셔서 감사합니다!</p>
             <p>아래 인증 코드를 입력하여 회원가입을 완료해주세요.</p>
 
             <div class="code-box">
@@ -126,14 +126,14 @@ export async function sendVerificationEmail(
 
             <div class="footer">
               <p>이 이메일은 발신 전용입니다. 답장하지 마세요.</p>
-              <p>&copy; 2025 GAMERATE. All rights reserved.</p>
+              <p>&copy; 2025 겜프파이어. All rights reserved.</p>
             </div>
           </div>
         </body>
       </html>
     `,
     text: `
-GAMERATE 이메일 인증
+겜프파이어 이메일 인증
 
 인증 코드: ${verificationCode}
 
@@ -142,7 +142,7 @@ GAMERATE 이메일 인증
 
 본인이 요청하지 않은 경우, 이 이메일을 무시하시기 바랍니다.
 
-© 2025 GAMERATE
+© 2025 겜프파이어
     `,
   }
 
@@ -159,9 +159,9 @@ export async function sendPasswordResetEmail(
   const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`
 
   const mailOptions = {
-    from: `"GAMERATE" <${process.env.EMAIL_USER}>`,
+    from: `"겜프파이어" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: '[GAMERATE] 비밀번호 재설정',
+    subject: '[겜프파이어] 비밀번호 재설정',
     html: `
       <!DOCTYPE html>
       <html>
@@ -170,7 +170,7 @@ export async function sendPasswordResetEmail(
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2>🎮 GAMERATE</h2>
+            <h2>🔥 겜프파이어</h2>
             <h3>비밀번호 재설정</h3>
             <p>비밀번호 재설정을 요청하셨습니다.</p>
             <p>아래 버튼을 클릭하여 새로운 비밀번호를 설정해주세요:</p>

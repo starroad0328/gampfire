@@ -228,6 +228,7 @@ function LoginContent() {
               variant="outline"
               className="w-full"
               disabled={loading}
+              onClick={() => signIn('google', { callbackUrl: '/' })}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path

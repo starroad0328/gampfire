@@ -1,10 +1,15 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -112,7 +117,57 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account, profile }) {
+      // Google OAuth sign-in
+      if (account?.provider === 'google') {
+        try {
+          const email = user.email
+          if (!email) {
+            return false
+          }
+
+          // Check if user exists
+          let existingUser = await prisma.user.findUnique({
+            where: { email },
+            include: { reviews: true },
+          })
+
+          if (!existingUser) {
+            // Create new user from Google account
+            const username = email.split('@')[0] + Math.floor(Math.random() * 1000)
+            existingUser = await prisma.user.create({
+              data: {
+                email,
+                username,
+                name: user.name || username,
+                image: user.image,
+                emailVerified: new Date(), // Google email is already verified
+              },
+              include: { reviews: true },
+            })
+          } else if (!existingUser.image && user.image) {
+            // Update existing user's image if they don't have one
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: { image: user.image },
+            })
+          }
+
+          // Store user data for JWT callback
+          user.id = existingUser.id
+          user.username = existingUser.username!
+          user.needsOnboarding = existingUser.reviews.length === 0
+
+          return true
+        } catch (error) {
+          console.error('Google sign-in error:', error)
+          return false
+        }
+      }
+
+      return true
+    },
+    async jwt({ token, user, account }) {
       // Initial sign in
       if (user) {
         token.id = user.id
