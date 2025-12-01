@@ -87,7 +87,7 @@ export default async function Home() {
             <div className="flex gap-4 justify-center">
               {!session && (
                 <Button size="lg" asChild>
-                  <Link href="/signup">시작하기</Link>
+                  <Link href="/games">시작하기</Link>
                 </Button>
               )}
             </div>
