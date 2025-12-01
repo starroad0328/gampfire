@@ -94,7 +94,7 @@ export function Header() {
               리뷰
             </Link>
             <Link href="/onboarding" className="hover:underline whitespace-nowrap">
-              취향 설정
+              취향 찾기
             </Link>
           </nav>
 

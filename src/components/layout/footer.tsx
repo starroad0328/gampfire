@@ -36,7 +36,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/onboarding" className="hover:text-foreground transition-colors">
-                  리스트
+                  취향 찾기
                 </Link>
               </li>
             </ul>
@@ -77,7 +77,7 @@ export function Footer() {
               <li className="flex items-center gap-2">
                 <Github className="h-4 w-4" />
                 <a
-                  href="https://github.com/gampfire"
+                  href="https://github.com/starroad0328"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-foreground transition-colors"
