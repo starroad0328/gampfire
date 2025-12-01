@@ -136,8 +136,9 @@ function LoginContent() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-bold text-center">
-            🎮 GAMERATE
+          <CardTitle className="text-3xl font-bold text-center flex items-center justify-center gap-3">
+            <img src="/gampfire-logo.png" alt="Gampfire" className="w-12 h-12" />
+            <span>겜프파이어</span>
           </CardTitle>
           <CardDescription className="text-center">
             아이디와 비밀번호로 로그인하세요
