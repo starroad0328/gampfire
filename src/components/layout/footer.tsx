@@ -8,7 +8,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* 서비스 정보 */}
           <div className="space-y-3">
-            <h3 className="font-bold text-lg">🎮 GampFire</h3>
+            <div className="flex items-center gap-2">
+              <img src="/gampfire-logo.png" alt="Gampfire" className="w-8 h-8" />
+              <h3 className="font-bold text-lg">겜프파이어</h3>
+            </div>
             <p className="text-sm text-muted-foreground">
               한국어 중심의 게임 평점·리뷰 플랫폼
             </p>
@@ -89,7 +92,7 @@ export function Footer() {
         {/* 하단 저작권 및 추가 정보 */}
         <div className="border-t mt-8 pt-6 text-center space-y-2">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} GampFire. All rights reserved.
+            © {new Date().getFullYear()} 겜프파이어. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             게임 데이터 제공: IGDB (Twitch) · Steam API
