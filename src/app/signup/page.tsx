@@ -180,7 +180,36 @@ export default function SignupPage() {
               variant="outline"
               className="w-full"
               disabled={loading}
-              onClick={() => signIn('google', { callbackUrl: '/' })}
+              onClick={async () => {
+                setLoading(true)
+                setError('')
+                try {
+                  const result = await signIn('google', { redirect: false })
+
+                  if (result?.error) {
+                    setError(result.error)
+                    setLoading(false)
+                    return
+                  }
+
+                  if (result?.ok) {
+                    // For signup, always redirect to onboarding for new users
+                    // Check if user needs onboarding
+                    const sessionRes = await fetch('/api/auth/session')
+                    const session = await sessionRes.json()
+
+                    if (session?.user?.needsOnboarding) {
+                      router.push('/onboarding')
+                    } else {
+                      router.push('/')
+                    }
+                    router.refresh()
+                  }
+                } catch (err) {
+                  setError('Google 로그인 처리 중 오류가 발생했습니다.')
+                  setLoading(false)
+                }
+              }}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path

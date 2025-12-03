@@ -128,8 +128,13 @@ function VerifyEmailContent() {
               이메일 인증이 성공적으로 완료되었습니다.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center text-sm text-muted-foreground">
-            잠시 후 로그인 페이지로 이동합니다...
+          <CardContent className="text-center">
+            <p className="text-sm text-muted-foreground mb-2">
+              잠시 후 로그인 페이지로 이동합니다...
+            </p>
+            <p className="text-sm font-medium text-primary">
+              로그인 후 취향 설정을 시작하세요! 🎮
+            </p>
           </CardContent>
         </Card>
       </div>
