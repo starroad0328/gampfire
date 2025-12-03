@@ -40,34 +40,58 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if username already exists (in both User and PendingUser)
+    // Check if username already exists in User table
     const existingUsername = await prisma.user.findUnique({
       where: { username },
     })
-    const pendingUsername = await prisma.pendingUser.findUnique({
-      where: { username },
-    })
 
-    if (existingUsername || pendingUsername) {
+    if (existingUsername) {
       return NextResponse.json(
         { error: '이미 사용 중인 아이디입니다.' },
         { status: 400 }
       )
     }
 
-    // Check if email already exists (in both User and PendingUser)
+    // Check if username exists in PendingUser
+    const pendingUsername = await prisma.pendingUser.findUnique({
+      where: { username },
+    })
+
+    // If pending username exists with different email, reject
+    // If same email, it will be deleted in the next step
+    if (pendingUsername && pendingUsername.email !== email) {
+      return NextResponse.json(
+        { error: '이미 사용 중인 아이디입니다.' },
+        { status: 400 }
+      )
+    }
+
+    // Check if email already exists in User table (verified accounts)
     const existingEmail = await prisma.user.findUnique({
       where: { email },
     })
-    const pendingEmail = await prisma.pendingUser.findUnique({
-      where: { email },
-    })
 
-    if (existingEmail || pendingEmail) {
+    if (existingEmail) {
       return NextResponse.json(
         { error: '이미 가입된 이메일입니다.' },
         { status: 400 }
       )
+    }
+
+    // Check if email exists in PendingUser (unverified)
+    const pendingEmail = await prisma.pendingUser.findUnique({
+      where: { email },
+    })
+
+    // If pending user exists, delete old one and create new (allow re-registration)
+    if (pendingEmail) {
+      // Delete old pending user and verification tokens
+      await prisma.pendingUser.delete({
+        where: { email },
+      })
+      await prisma.verificationToken.deleteMany({
+        where: { email },
+      })
     }
 
     // Hash password
