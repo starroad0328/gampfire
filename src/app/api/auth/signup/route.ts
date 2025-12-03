@@ -40,24 +40,30 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if username already exists
+    // Check if username already exists (in both User and PendingUser)
     const existingUsername = await prisma.user.findUnique({
       where: { username },
     })
+    const pendingUsername = await prisma.pendingUser.findUnique({
+      where: { username },
+    })
 
-    if (existingUsername) {
+    if (existingUsername || pendingUsername) {
       return NextResponse.json(
         { error: '이미 사용 중인 아이디입니다.' },
         { status: 400 }
       )
     }
 
-    // Check if email already exists
+    // Check if email already exists (in both User and PendingUser)
     const existingEmail = await prisma.user.findUnique({
       where: { email },
     })
+    const pendingEmail = await prisma.pendingUser.findUnique({
+      where: { email },
+    })
 
-    if (existingEmail) {
+    if (existingEmail || pendingEmail) {
       return NextResponse.json(
         { error: '이미 가입된 이메일입니다.' },
         { status: 400 }
@@ -67,14 +73,17 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create user
-    const user = await prisma.user.create({
+    // Create pending user (not actual user until email verified)
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 24) // Expires in 24 hours
+
+    await prisma.pendingUser.create({
       data: {
         username,
         email,
         password: hashedPassword,
         name: username, // Default name to username
-        emailVerified: null, // Not verified yet
+        expiresAt,
       },
     })
 
@@ -82,14 +91,14 @@ export async function POST(request: Request) {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
 
     // Save verification token
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 24) // Expires in 24 hours
+    const tokenExpiresAt = new Date()
+    tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 24) // Expires in 24 hours
 
     await prisma.verificationToken.create({
       data: {
-        email: user.email,
+        email,
         token: verificationCode,
-        expires: expiresAt,
+        expires: tokenExpiresAt,
       },
     })
 
@@ -104,8 +113,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: '회원가입이 완료되었습니다. 이메일을 확인해주세요.',
-      userId: user.id,
-      email: user.email,
+      email,
     })
   } catch (error) {
     console.error('Signup error:', error)

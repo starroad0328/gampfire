@@ -40,12 +40,32 @@ export async function POST(request: Request) {
       )
     }
 
-    // Update user's emailVerified
-    await prisma.user.update({
+    // Get pending user data
+    const pendingUser = await prisma.pendingUser.findUnique({
       where: { email },
+    })
+
+    if (!pendingUser) {
+      return NextResponse.json(
+        { error: '가입 정보를 찾을 수 없습니다. 다시 회원가입해주세요.' },
+        { status: 404 }
+      )
+    }
+
+    // Create actual user account
+    await prisma.user.create({
       data: {
+        username: pendingUser.username,
+        email: pendingUser.email,
+        password: pendingUser.password,
+        name: pendingUser.name,
         emailVerified: new Date(),
       },
+    })
+
+    // Delete pending user
+    await prisma.pendingUser.delete({
+      where: { email },
     })
 
     // Delete used verification token

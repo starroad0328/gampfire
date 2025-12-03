@@ -245,6 +245,22 @@ model Announcement {
   @@index([createdAt])
 }
 
+// Pending users (before email verification)
+model PendingUser {
+  id         String   @id @default(cuid())
+  username   String   @unique
+  email      String   @unique
+  password   String   // Hashed password
+  name       String
+
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime // Auto-delete after 24 hours if not verified
+
+  @@index([email])
+  @@index([username])
+  @@index([expiresAt])
+}
+
 // Email verification tokens
 model VerificationToken {
   id         String   @id @default(cuid())

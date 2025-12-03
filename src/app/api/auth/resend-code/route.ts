@@ -13,23 +13,27 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user exists
-    const user = await prisma.user.findUnique({
+    // Check if pending user exists
+    const pendingUser = await prisma.pendingUser.findUnique({
       where: { email },
     })
 
-    if (!user) {
-      return NextResponse.json(
-        { error: '등록되지 않은 이메일입니다.' },
-        { status: 404 }
-      )
-    }
+    if (!pendingUser) {
+      // Also check if already a verified user
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      })
 
-    // Check if already verified
-    if (user.emailVerified) {
+      if (existingUser) {
+        return NextResponse.json(
+          { error: '이미 인증된 계정입니다.' },
+          { status: 400 }
+        )
+      }
+
       return NextResponse.json(
-        { error: '이미 인증된 계정입니다.' },
-        { status: 400 }
+        { error: '등록되지 않은 이메일입니다. 먼저 회원가입을 해주세요.' },
+        { status: 404 }
       )
     }
 
