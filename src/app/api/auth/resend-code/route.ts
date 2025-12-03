@@ -54,7 +54,12 @@ export async function POST(request: Request) {
     })
 
     // Send verification email
-    await sendVerificationEmail(email, verificationCode)
+    try {
+      await sendVerificationEmail(email, verificationCode)
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError)
+      // Continue even if email fails - code is saved in DB
+    }
 
     return NextResponse.json({
       success: true,
