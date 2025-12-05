@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Star, Sparkles } from 'lucide-react'
+import { Star, Sparkles, Settings2 } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPopularGames as getPopularGamesAPI } from '@/lib/igdb'
@@ -101,8 +101,25 @@ export default async function Home() {
           <h2 className="text-3xl font-bold text-center mb-12">
             지금 바로 시작하세요
           </h2>
-          <div className="flex justify-center max-w-2xl mx-auto">
-            <Link href="/games" className="block w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* 취향 설정하러 가기 */}
+            <Link href="/onboarding" className="block">
+              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader>
+                  <Settings2 className="w-12 h-12 mb-4 text-primary mx-auto" />
+                  <CardTitle className="text-2xl text-center">취향 설정하러 가기</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-center">
+                    10개 게임을 평가하고 당신의 취향을 분석해보세요.
+                    맞춤형 게임 추천을 받을 수 있습니다.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* 게임 평가하러 가기 */}
+            <Link href="/games" className="block">
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader>
                   <Star className="w-12 h-12 mb-4 text-primary mx-auto" />
