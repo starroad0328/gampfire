@@ -177,7 +177,7 @@ export default function GamesPage() {
       </div>
 
       <Tabs value={activeTab} className="w-full" onValueChange={(val) => setActiveTab(val as 'hot' | 'popular' | 'recent' | 'recommended')}>
-        <div className="mb-4">
+        <div className="space-y-4 mb-6">
           <TabsList>
             <TabsTrigger value="hot" className="flex items-center gap-1">
               <Flame className="w-4 h-4 text-orange-500" />
@@ -187,15 +187,15 @@ export default function GamesPage() {
             <TabsTrigger value="popular">인기 게임</TabsTrigger>
             <TabsTrigger value="recent">최신 게임</TabsTrigger>
           </TabsList>
-        </div>
 
-        <button
-          onClick={() => setShowGenreCircle(!showGenreCircle)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 mb-6 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-        >
-          <Filter className="w-5 h-5" />
-          장르별 검색
-        </button>
+          <button
+            onClick={() => setShowGenreCircle(!showGenreCircle)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+          >
+            <Filter className="w-5 h-5" />
+            장르별 검색
+          </button>
+        </div>
 
         {/* Genre Selection Section */}
         {showGenreCircle && (

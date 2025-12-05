@@ -102,12 +102,12 @@ export default async function Home() {
             지금 바로 시작하세요
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {/* 취향 설정하러 가기 */}
+            {/* 취향 찾기 */}
             <Link href="/onboarding" className="block">
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader>
                   <Settings2 className="w-12 h-12 mb-4 text-primary mx-auto" />
-                  <CardTitle className="text-2xl text-center">취향 설정하러 가기</CardTitle>
+                  <CardTitle className="text-2xl text-center">취향 찾기</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground text-center">
