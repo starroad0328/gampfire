@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { Star } from 'lucide-react'
+import { Star, Loader2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ type GameFilter = 'popular' | 'recent'
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [games, setGames] = useState<Game[]>([])
   const [ratings, setRatings] = useState<Map<number, number>>(new Map())
   const [page, setPage] = useState(0)
@@ -36,6 +38,27 @@ export default function OnboardingPage() {
   const [totalReviewCount, setTotalReviewCount] = useState<number>(0) // 사용자의 총 리뷰 개수
   const observerRef = useRef<IntersectionObserver | null>(null)
   const lastGameRef = useRef<HTMLDivElement | null>(null)
+
+  // 로그인 체크
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login')
+    }
+  }, [status, router])
+
+  // 로딩 중이면 로딩 화면 표시
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // 로그인하지 않은 경우 아무것도 표시하지 않음 (리다이렉트 진행 중)
+  if (!session) {
+    return null
+  }
 
   // 게임 데이터 로드
   const loadGames = useCallback(async () => {
