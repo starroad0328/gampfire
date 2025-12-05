@@ -140,7 +140,7 @@ export const authOptions: NextAuthOptions = {
                 email,
                 username,
                 name: user.name || username,
-                image: null, // 기본 프로필 사진 사용
+                image: '/default-avatar.png', // 기본 프로필 사진 사용
                 emailVerified: new Date(), // Google email is already verified
               },
               include: { reviews: true },

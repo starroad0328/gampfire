@@ -23,15 +23,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Reset all profile images to null (default)
+    // Reset all profile images to default avatar
     const result = await prisma.user.updateMany({
       where: {
         image: {
-          not: null,
+          not: '/default-avatar.png',
         },
       },
       data: {
-        image: null,
+        image: '/default-avatar.png',
       },
     })
 

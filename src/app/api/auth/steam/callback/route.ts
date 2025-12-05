@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
                 emailVerified: new Date(), // Auto-verify Steam users
                 steamId,
                 steamUsername: steamUser.personaname,
-                image: null, // 기본 프로필 사진 사용
+                image: '/default-avatar.png', // 기본 프로필 사진 사용
                 password: null, // No password for Steam-only users
               },
             })

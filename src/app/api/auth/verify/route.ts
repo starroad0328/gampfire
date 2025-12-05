@@ -59,6 +59,7 @@ export async function POST(request: Request) {
         email: pendingUser.email,
         password: pendingUser.password,
         name: pendingUser.name,
+        image: '/default-avatar.png',
         emailVerified: new Date(),
       },
     })
