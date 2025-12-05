@@ -10,6 +10,7 @@ import { useState, useEffect, use } from 'react'
 import { ReviewSection } from '@/components/features/review-section'
 import { ReviewButton } from '@/components/features/review-button'
 import { UserBadge } from '@/components/ui/user-badge'
+import { StarRating } from '@/components/ui/star-rating'
 
 interface GamePageProps {
   params: Promise<{ id: string }>

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Star, Heart, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
+import { StarRating } from '@/components/ui/star-rating'
 
 interface AllReviewsPageProps {
   searchParams: Promise<{ userId?: string }>
@@ -156,23 +157,7 @@ export default async function AllReviewsPage({ searchParams }: AllReviewsPagePro
                     </Link>
 
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-5 h-5 ${
-                                i < Math.round(review.rating)
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-muted-foreground'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-base font-semibold text-foreground">
-                          {review.rating.toFixed(1)}
-                        </span>
-                      </div>
+                      <StarRating rating={review.rating} size="md" showNumber />
                       <span className="text-sm text-muted-foreground">
                         {new Date(review.createdAt).toLocaleDateString('ko-KR', {
                           year: 'numeric',

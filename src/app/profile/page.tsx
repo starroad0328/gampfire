@@ -10,6 +10,7 @@ import { UserBadge } from '@/components/ui/user-badge'
 import { SteamLinkMessage } from '@/components/features/steam-link-message'
 import { SteamAccountSection } from '@/components/features/steam-account-section'
 import { FollowButton } from '@/components/features/follow-button'
+import { StarRating } from '@/components/ui/star-rating'
 
 interface ProfilePageProps {
   searchParams: Promise<{ userId?: string }>
@@ -324,23 +325,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                         </Link>
 
                         <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < Math.round(review.rating)
-                                      ? 'fill-primary text-primary'
-                                      : 'text-muted-foreground'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm font-medium text-foreground">
-                              {review.rating.toFixed(1)}
-                            </span>
-                          </div>
+                          <StarRating rating={review.rating} size="sm" showNumber />
                           <span className="text-xs text-muted-foreground">
                             {new Date(review.createdAt).toLocaleDateString('ko-KR')}
                           </span>
