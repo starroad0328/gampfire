@@ -265,15 +265,23 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">관리자 패널</h2>
-                    <p className="text-sm text-muted-foreground">사용자 관리 및 배지 부여</p>
+                    <p className="text-sm text-muted-foreground">사용자 및 리뷰 관리</p>
                   </div>
                 </div>
-                <Link
-                  href="/admin/users"
-                  className="block w-full bg-purple-600 hover:bg-purple-700 text-white text-center py-3 rounded-md font-medium transition-colors"
-                >
-                  관리자 페이지 열기 →
-                </Link>
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href="/admin/users"
+                    className="block bg-purple-600 hover:bg-purple-700 text-white text-center py-3 rounded-md font-medium transition-colors"
+                  >
+                    사용자 관리
+                  </Link>
+                  <Link
+                    href="/admin/reviews"
+                    className="block bg-blue-600 hover:bg-blue-700 text-white text-center py-3 rounded-md font-medium transition-colors"
+                  >
+                    리뷰 관리
+                  </Link>
+                </div>
               </div>
             )}
 

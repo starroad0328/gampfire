@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { UserBadge } from '@/components/ui/user-badge'
-import { Search, X, Users, Shield, Star, TrendingUp, ArrowUpDown, Trash2 } from 'lucide-react'
+import { Search, X, Users, Shield, Star, TrendingUp, ArrowUpDown, Trash2, Edit2, Check, X as XIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface UserData {
@@ -51,6 +51,8 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  const [editingUsername, setEditingUsername] = useState('')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -116,6 +118,50 @@ export default function AdminUsersPage() {
       toast({
         title: "Error",
         description: 'Error updating role',
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUpdateUsername = async (userId: string) => {
+    if (!editingUsername.trim()) {
+      toast({
+        title: "Error",
+        description: '닉네임을 입력해주세요',
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/users/update-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, username: editingUsername.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({
+          title: "Error",
+          description: data.error || 'Failed to update username',
+          variant: "destructive",
+        })
+        return
+      }
+
+      setUsers(users.map(u => u.id === userId ? { ...u, username: editingUsername.trim() } : u))
+      setEditingUserId(null)
+      setEditingUsername('')
+      toast({
+        title: "Success",
+        description: '닉네임이 변경되었습니다',
+      })
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: 'Error updating username',
         variant: "destructive",
       })
     }
@@ -389,8 +435,52 @@ export default function AdminUsersPage() {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      {user.name || user.username || '이름 없음'}
-                      <UserBadge role={user.role} size="sm" />
+                      {editingUserId === user.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editingUsername}
+                            onChange={(e) => setEditingUsername(e.target.value)}
+                            className="h-8 w-40"
+                            placeholder="닉네임"
+                            autoFocus
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleUpdateUsername(user.id)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Check className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingUserId(null)
+                              setEditingUsername('')
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <XIcon className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span>{user.username || user.name || '이름 없음'}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingUserId(user.id)
+                              setEditingUsername(user.username || '')
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <UserBadge role={user.role} size="sm" />
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
