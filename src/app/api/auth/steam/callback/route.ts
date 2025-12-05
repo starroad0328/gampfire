@@ -87,12 +87,11 @@ export async function GET(request: NextRequest) {
           })
 
           if (user) {
-            // Update Steam username and avatar if changed
+            // Update Steam username only (not avatar)
             await prisma.user.update({
               where: { id: user.id },
               data: {
                 steamUsername: steamUser.personaname,
-                image: steamUser.avatarfull,
               },
             })
           } else {
@@ -120,7 +119,7 @@ export async function GET(request: NextRequest) {
                 emailVerified: new Date(), // Auto-verify Steam users
                 steamId,
                 steamUsername: steamUser.personaname,
-                image: steamUser.avatarfull,
+                image: null, // 기본 프로필 사진 사용
                 password: null, // No password for Steam-only users
               },
             })

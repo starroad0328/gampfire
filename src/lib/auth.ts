@@ -140,16 +140,10 @@ export const authOptions: NextAuthOptions = {
                 email,
                 username,
                 name: user.name || username,
-                image: user.image,
+                image: null, // 기본 프로필 사진 사용
                 emailVerified: new Date(), // Google email is already verified
               },
               include: { reviews: true },
-            })
-          } else if (!existingUser.image && user.image) {
-            // Update existing user's image if they don't have one
-            await prisma.user.update({
-              where: { id: existingUser.id },
-              data: { image: user.image },
             })
           }
 
