@@ -177,7 +177,7 @@ export default function GamesPage() {
       </div>
 
       <Tabs value={activeTab} className="w-full" onValueChange={(val) => setActiveTab(val as 'hot' | 'popular' | 'recent' | 'recommended')}>
-        <div className="mb-6">
+        <div className="flex items-center justify-between mb-6">
           <TabsList>
             <TabsTrigger value="hot" className="flex items-center gap-1">
               <Flame className="w-4 h-4 text-orange-500" />
@@ -187,67 +187,77 @@ export default function GamesPage() {
             <TabsTrigger value="popular">인기 게임</TabsTrigger>
             <TabsTrigger value="recent">최신 게임</TabsTrigger>
           </TabsList>
+
+          <button
+            onClick={() => setShowGenreCircle(!showGenreCircle)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+          >
+            <Filter className="w-5 h-5" />
+            장르별 검색
+          </button>
         </div>
 
         {/* Genre Selection Section */}
-        <div className="mb-6 p-6 bg-muted/30 rounded-lg border border-border">
-          <div className="flex items-center gap-2 mb-4">
-            <Gamepad2 className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">장르별 검색</h3>
+        {showGenreCircle && (
+          <div className="mb-6 p-6 bg-muted/30 rounded-lg border border-border">
+            <div className="flex items-center gap-2 mb-4">
+              <Gamepad2 className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">장르 선택</h3>
+              {selectedGenres.length > 0 && (
+                <button
+                  onClick={() => setSelectedGenres([])}
+                  className="ml-auto text-sm text-muted-foreground hover:text-foreground underline"
+                >
+                  초기화
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {mainGenres.map((genre) => {
+                const isSelected = selectedGenres.includes(genre.name)
+                return (
+                  <button
+                    key={genre.name}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedGenres(selectedGenres.filter(g => g !== genre.name))
+                      } else {
+                        setSelectedGenres([...selectedGenres, genre.name])
+                      }
+                    }}
+                    className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+                      isSelected
+                        ? 'border-primary bg-primary/10 shadow-md'
+                        : 'border-border bg-background hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-2xl">{genre.icon}</span>
+                      <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                        {translateGenre(genre.name)}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
             {selectedGenres.length > 0 && (
-              <button
-                onClick={() => setSelectedGenres([])}
-                className="ml-auto text-sm text-muted-foreground hover:text-foreground underline"
-              >
-                초기화
-              </button>
+              <div className="mt-4 flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-muted-foreground">선택됨:</span>
+                {selectedGenres.map(genre => (
+                  <span
+                    key={genre}
+                    className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium"
+                  >
+                    {translateGenre(genre)}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {mainGenres.map((genre) => {
-              const isSelected = selectedGenres.includes(genre.name)
-              return (
-                <button
-                  key={genre.name}
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedGenres(selectedGenres.filter(g => g !== genre.name))
-                    } else {
-                      setSelectedGenres([...selectedGenres, genre.name])
-                    }
-                  }}
-                  className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
-                    isSelected
-                      ? 'border-primary bg-primary/10 shadow-md'
-                      : 'border-border bg-background hover:border-primary/50'
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-2xl">{genre.icon}</span>
-                    <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                      {translateGenre(genre.name)}
-                    </span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          {selectedGenres.length > 0 && (
-            <div className="mt-4 flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground">선택됨:</span>
-              {selectedGenres.map(genre => (
-                <span
-                  key={genre}
-                  className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium"
-                >
-                  {translateGenre(genre)}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
 
         <TabsContent value="hot">
           {error ? (
