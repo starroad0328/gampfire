@@ -109,10 +109,8 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
 
       setSuccess(existingReview ? '리뷰가 수정되었습니다!' : '리뷰가 작성되었습니다!')
 
-      // Refresh the page to show updated review
-      setTimeout(() => {
-        router.refresh()
-      }, 1000)
+      // Immediately refresh the page to show updated review
+      window.location.reload()
     } catch (err) {
       setError('리뷰 작성 중 오류가 발생했습니다')
     } finally {
@@ -143,10 +141,8 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
 
       setSuccess('리뷰가 삭제되었습니다!')
 
-      // Refresh the page to show updated review list
-      setTimeout(() => {
-        router.refresh()
-      }, 1000)
+      // Immediately refresh the page to show updated review list
+      window.location.reload()
     } catch (err) {
       setError('리뷰 삭제 중 오류가 발생했습니다')
     } finally {
