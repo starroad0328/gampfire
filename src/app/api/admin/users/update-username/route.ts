@@ -23,39 +23,57 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { userId, username } = await request.json()
+    const { userId, username, name } = await request.json()
 
-    if (!userId || !username) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'User ID and username are required' },
+        { error: 'User ID is required' },
         { status: 400 }
       )
     }
 
-    // Validate username format
-    if (username.length < 3 || username.length > 20) {
-      return NextResponse.json(
-        { error: 'Username must be between 3-20 characters' },
-        { status: 400 }
-      )
+    const updateData: any = {}
+
+    // Update username if provided
+    if (username !== undefined) {
+      if (!username.trim()) {
+        return NextResponse.json(
+          { error: 'Username cannot be empty' },
+          { status: 400 }
+        )
+      }
+
+      if (username.length < 3 || username.length > 20) {
+        return NextResponse.json(
+          { error: 'Username must be between 3-20 characters' },
+          { status: 400 }
+        )
+      }
+
+      // Check if username is already taken
+      const existingUser = await prisma.user.findUnique({
+        where: { username },
+      })
+
+      if (existingUser && existingUser.id !== userId) {
+        return NextResponse.json(
+          { error: 'Username is already taken' },
+          { status: 400 }
+        )
+      }
+
+      updateData.username = username.trim()
     }
 
-    // Check if username is already taken
-    const existingUser = await prisma.user.findUnique({
-      where: { username },
-    })
-
-    if (existingUser && existingUser.id !== userId) {
-      return NextResponse.json(
-        { error: 'Username is already taken' },
-        { status: 400 }
-      )
+    // Update name if provided
+    if (name !== undefined) {
+      updateData.name = name.trim() || null
     }
 
-    // Update username
+    // Update user
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { username },
+      data: updateData,
     })
 
     return NextResponse.json({
@@ -63,6 +81,7 @@ export async function POST(request: NextRequest) {
       user: {
         id: updatedUser.id,
         username: updatedUser.username,
+        name: updatedUser.name,
       },
     })
   } catch (error) {
