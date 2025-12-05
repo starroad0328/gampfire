@@ -177,6 +177,44 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleResetAllImages = async () => {
+    if (!confirm('모든 사용자의 프로필 사진을 기본 이미지로 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/reset-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({
+          title: "Error",
+          description: data.error || 'Failed to reset images',
+          variant: "destructive",
+        })
+        return
+      }
+
+      toast({
+        title: "Success",
+        description: `${data.count}명의 프로필 사진이 초기화되었습니다`,
+      })
+
+      // Refresh user list
+      fetchUsers()
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: 'Error resetting images',
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (!confirm(`정말로 "${userName}" 계정을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 사용자의 모든 리뷰와 데이터가 삭제됩니다.`)) {
       return
@@ -364,25 +402,34 @@ export default function AdminUsersPage() {
         )}
 
         <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="이메일, 이름 또는 사용자명으로 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="이메일, 이름 또는 사용자명으로 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleResetAllImages}
+              className="whitespace-nowrap"
+            >
+              모든 프로필 사진 초기화
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground">
             {users.length}명 중 {filteredAndSortedUsers.length}명 표시
           </p>
         </div>
