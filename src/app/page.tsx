@@ -10,9 +10,8 @@ import { getRecommendedGamesForUser } from '@/lib/recommendations'
 
 async function getPopularGames() {
   try {
-    // 직접 IGDB API 호출 (fetch 대신)
-    const games = await getPopularGamesAPI(60, 0)
-    console.log('✅ Loaded', games.length, 'popular games from IGDB')
+    // 캐싱된 데이터 사용 (30개로 축소)
+    const games = await getPopularGamesAPI(30, 0)
 
     return games.map((game: any) => ({
       id: game.id,
@@ -27,10 +26,8 @@ async function getPopularGames() {
 
 async function getRecommendedGames(userId: string) {
   try {
-    // 직접 함수 호출 (fetch 대신)
-    const result = await getRecommendedGamesForUser(userId, 10)
+    const result = await getRecommendedGamesForUser(userId, 4)
     const games = result.games || []
-    console.log('✅ Loaded', games.length, 'recommended games')
     return games
   } catch (error) {
     console.error('❌ Failed to fetch recommended games:', error)
@@ -38,12 +35,17 @@ async function getRecommendedGames(userId: string) {
   }
 }
 
+// 페이지 캐싱 설정 (1시간)
+export const revalidate = 3600
+
 export default async function Home() {
-  const games = await getPopularGames()
   const session = await getServerSession(authOptions)
-  const recommendedGames = session?.user?.id ? await getRecommendedGames(session.user.id) : []
-  console.log('🎮 Loaded games for background:', games.length)
-  console.log('✨ Loaded recommended games:', recommendedGames.length)
+
+  // 병렬로 데이터 가져오기
+  const [games, recommendedGames] = await Promise.all([
+    getPopularGames(),
+    session?.user?.id ? getRecommendedGames(session.user.id) : Promise.resolve([])
+  ])
 
   return (
     <div className="min-h-screen">

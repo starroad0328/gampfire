@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+// 10분마다 캐시 갱신
+export const revalidate = 600
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// 5분마다 캐시 갱신
+export const revalidate = 300
+
 /**
  * Get hot games based on Steam concurrent players
  * These are games with highest current player count on Steam

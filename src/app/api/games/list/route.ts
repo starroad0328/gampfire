@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPopularGames, getRecentGames, convertIGDBGame } from '@/lib/igdb'
 import { prisma } from '@/lib/prisma'
 
+// 5분마다 캐시 갱신
+export const revalidate = 300
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
