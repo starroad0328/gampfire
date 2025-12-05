@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StarRating } from '@/components/ui/star-rating'
 import { UserBadge } from '@/components/ui/user-badge'
 import { Button } from '@/components/ui/button'
@@ -35,23 +34,32 @@ interface Review {
 
 export default function ReviewsPage() {
   const { data: session } = useSession()
-  const [activeTab, setActiveTab] = useState<'recent' | 'top'>('recent')
   const [recentReviews, setRecentReviews] = useState<Review[]>([])
   const [topReviews, setTopReviews] = useState<Review[]>([])
   const [recentOffset, setRecentOffset] = useState(0)
   const [topOffset, setTopOffset] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const [loadingRecent, setLoadingRecent] = useState(false)
+  const [loadingTop, setLoadingTop] = useState(false)
   const [hasMoreRecent, setHasMoreRecent] = useState(true)
   const [hasMoreTop, setHasMoreTop] = useState(true)
   const [reviewVotes, setReviewVotes] = useState<Map<string, 'like' | 'dislike'>>(new Map())
-  const observerTarget = useRef<HTMLDivElement>(null)
+  const recentObserverTarget = useRef<HTMLDivElement>(null)
+  const topObserverTarget = useRef<HTMLDivElement>(null)
 
   const loadReviews = useCallback(async (type: 'recent' | 'top', offset: number) => {
-    if (loading) return
+    const isLoadingRecent = type === 'recent' && loadingRecent
+    const isLoadingTop = type === 'top' && loadingTop
 
-    setLoading(true)
+    if (isLoadingRecent || isLoadingTop) return
+
+    if (type === 'recent') {
+      setLoadingRecent(true)
+    } else {
+      setLoadingTop(true)
+    }
+
     try {
-      const res = await fetch(`/api/reviews/list?type=${type}&offset=${offset}&limit=20`)
+      const res = await fetch(`/api/reviews/list?type=${type}&offset=${offset}&limit=10`)
       const data = await res.json()
 
       if (!res.ok) {
@@ -61,11 +69,11 @@ export default function ReviewsPage() {
 
       if (type === 'recent') {
         setRecentReviews(prev => [...prev, ...data.reviews])
-        setRecentOffset(offset + 20)
+        setRecentOffset(offset + 10)
         setHasMoreRecent(data.hasMore)
       } else {
         setTopReviews(prev => [...prev, ...data.reviews])
-        setTopOffset(offset + 20)
+        setTopOffset(offset + 10)
         setHasMoreTop(data.hasMore)
       }
 
@@ -80,35 +88,54 @@ export default function ReviewsPage() {
     } catch (error) {
       console.error('Error loading reviews:', error)
     } finally {
-      setLoading(false)
+      if (type === 'recent') {
+        setLoadingRecent(false)
+      } else {
+        setLoadingTop(false)
+      }
     }
-  }, [loading, reviewVotes])
+  }, [loadingRecent, loadingTop, reviewVotes])
 
   useEffect(() => {
     loadReviews('recent', 0)
     loadReviews('top', 0)
   }, [])
 
+  // Infinite scroll for recent reviews
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && !loading) {
-          if (activeTab === 'recent' && hasMoreRecent) {
-            loadReviews('recent', recentOffset)
-          } else if (activeTab === 'top' && hasMoreTop) {
-            loadReviews('top', topOffset)
-          }
+        if (entries[0].isIntersecting && !loadingRecent && hasMoreRecent) {
+          loadReviews('recent', recentOffset)
         }
       },
       { threshold: 0.1 }
     )
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current)
+    if (recentObserverTarget.current) {
+      observer.observe(recentObserverTarget.current)
     }
 
     return () => observer.disconnect()
-  }, [activeTab, loading, hasMoreRecent, hasMoreTop, recentOffset, topOffset, loadReviews])
+  }, [loadingRecent, hasMoreRecent, recentOffset, loadReviews])
+
+  // Infinite scroll for top reviews
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && !loadingTop && hasMoreTop) {
+          loadReviews('top', topOffset)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (topObserverTarget.current) {
+      observer.observe(topObserverTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [loadingTop, hasMoreTop, topOffset, loadReviews])
 
   const handleVote = async (reviewId: string, type: 'like' | 'dislike') => {
     if (!session) {
@@ -264,22 +291,22 @@ export default function ReviewsPage() {
           </p>
         </div>
 
-        <Tabs value={activeTab} className="w-full" onValueChange={(val) => setActiveTab(val as 'recent' | 'top')}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="recent" className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              최근 리뷰
-            </TabsTrigger>
-            <TabsTrigger value="top" className="flex items-center gap-1">
-              <TrendingUp className="w-4 h-4" />
-              추천 리뷰
-            </TabsTrigger>
-          </TabsList>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Reviews Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4 sticky top-20 bg-background py-2 z-10">
+              <Clock className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-bold">최근 리뷰</h2>
+            </div>
 
-          <TabsContent value="recent">
             {recentReviews.length > 0 ? (
               <div className="space-y-4">
                 {recentReviews.map(renderReview)}
+
+                {/* Infinite scroll trigger for recent */}
+                <div ref={recentObserverTarget} className="h-20 flex items-center justify-center">
+                  {loadingRecent && <p className="text-muted-foreground text-sm">로딩 중...</p>}
+                </div>
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
@@ -287,12 +314,23 @@ export default function ReviewsPage() {
                 <p>아직 리뷰가 없습니다</p>
               </div>
             )}
-          </TabsContent>
+          </div>
 
-          <TabsContent value="top">
+          {/* Top Reviews Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4 sticky top-20 bg-background py-2 z-10">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-bold">추천 리뷰</h2>
+            </div>
+
             {topReviews.length > 0 ? (
               <div className="space-y-4">
                 {topReviews.map(renderReview)}
+
+                {/* Infinite scroll trigger for top */}
+                <div ref={topObserverTarget} className="h-20 flex items-center justify-center">
+                  {loadingTop && <p className="text-muted-foreground text-sm">로딩 중...</p>}
+                </div>
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
@@ -300,12 +338,7 @@ export default function ReviewsPage() {
                 <p>아직 추천받은 리뷰가 없습니다</p>
               </div>
             )}
-          </TabsContent>
-        </Tabs>
-
-        {/* Infinite scroll trigger */}
-        <div ref={observerTarget} className="h-20 flex items-center justify-center">
-          {loading && <p className="text-muted-foreground">로딩 중...</p>}
+          </div>
         </div>
       </div>
     </div>
