@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPopularGames, getRecentGames, convertIGDBGame } from '@/lib/igdb'
 import { prisma } from '@/lib/prisma'
 
+// Force dynamic rendering (uses searchParams)
+export const dynamic = 'force-dynamic'
+
 // 5분마다 캐시 갱신
 export const revalidate = 300
 

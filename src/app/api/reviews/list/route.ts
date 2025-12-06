@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+// Force dynamic rendering (uses headers for session)
+export const dynamic = 'force-dynamic'
+
 // 5분마다 캐시 갱신
 export const revalidate = 300
 
