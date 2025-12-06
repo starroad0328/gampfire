@@ -6,9 +6,6 @@ import { getRecommendedGamesForUser } from '@/lib/recommendations'
 // Force dynamic rendering (uses headers for session)
 export const dynamic = 'force-dynamic'
 
-// 30분마다 캐시 갱신 (추천은 자주 바뀌지 않음)
-export const revalidate = 1800
-
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

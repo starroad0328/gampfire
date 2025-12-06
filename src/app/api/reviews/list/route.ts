@@ -6,9 +6,6 @@ import { authOptions } from '@/lib/auth'
 // Force dynamic rendering (uses headers for session)
 export const dynamic = 'force-dynamic'
 
-// 5분마다 캐시 갱신
-export const revalidate = 300
-
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

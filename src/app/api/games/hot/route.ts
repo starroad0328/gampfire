@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// 5분마다 캐시 갱신
-export const revalidate = 300
+// Force dynamic rendering (uses searchParams)
+export const dynamic = 'force-dynamic'
 
 /**
  * Get hot games based on Steam concurrent players
