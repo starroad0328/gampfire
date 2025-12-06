@@ -284,11 +284,11 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
             <div className="space-y-4 border border-border rounded-lg p-4 bg-muted/20 h-fit">
               <label className="text-sm font-medium">세부 평가 (선택)</label>
 
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 {/* 가격 만족도 */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">💰 가격 만족도</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -297,7 +297,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= priceRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -305,7 +305,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {priceRating > 0 ? priceRating : '-'}
                     </span>
                   </div>
@@ -314,7 +314,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                 {/* 그래픽 */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">🎨 그래픽</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -323,7 +323,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= graphicsRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -331,7 +331,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {graphicsRating > 0 ? graphicsRating : '-'}
                     </span>
                   </div>
@@ -340,7 +340,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                 {/* 조작감 */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">🎮 조작감</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -349,7 +349,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= controlRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -357,7 +357,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {controlRating > 0 ? controlRating : '-'}
                     </span>
                   </div>
@@ -366,7 +366,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                 {/* 연출 */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">🎬 연출</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -375,7 +375,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= directionRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -383,7 +383,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {directionRating > 0 ? directionRating : '-'}
                     </span>
                   </div>
@@ -392,7 +392,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                 {/* 스토리 */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">📖 스토리</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -401,7 +401,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= storyRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -409,7 +409,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {storyRating > 0 ? storyRating : '-'}
                     </span>
                   </div>
@@ -418,7 +418,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                 {/* OST */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">🎵 OST</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -427,7 +427,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= ostRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -435,7 +435,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {ostRating > 0 ? ostRating : '-'}
                     </span>
                   </div>
@@ -444,7 +444,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                 {/* 컨텐츠 볼륨 */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">📦 컨텐츠 볼륨</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -453,7 +453,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= volumeRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -461,7 +461,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {volumeRating > 0 ? volumeRating : '-'}
                     </span>
                   </div>
@@ -470,7 +470,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                 {/* 혁신성과 독창성 */}
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">💡 혁신성과 독창성</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
                         key={value}
@@ -479,7 +479,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-6 h-6 ${
+                          className={`w-5 h-5 ${
                             value <= innovationRating
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300'
@@ -487,7 +487,7 @@ export function ReviewForm({ gameId, gameName, existingReview }: ReviewFormProps
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm font-medium min-w-[2rem]">
+                    <span className="ml-1 text-sm font-medium min-w-[1.5rem]">
                       {innovationRating > 0 ? innovationRating : '-'}
                     </span>
                   </div>
