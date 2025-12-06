@@ -6,6 +6,8 @@ import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
 
@@ -15,6 +17,8 @@ function LoginContent() {
   const steamToken = searchParams.get('steamToken')
   const steamError = searchParams.get('error')
 
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -74,6 +78,48 @@ function LoginContent() {
     }
   }
 
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    if (!username || !password) {
+      setError('아이디와 비밀번호를 입력해주세요.')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const result = await signIn('credentials', {
+        username,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError(result.error)
+        setLoading(false)
+        return
+      }
+
+      if (result?.ok) {
+        // Check if user needs onboarding
+        const sessionRes = await fetch('/api/auth/session')
+        const session = await sessionRes.json()
+
+        if (session?.user?.needsOnboarding) {
+          router.push('/onboarding')
+        } else {
+          router.push('/')
+        }
+        router.refresh()
+      }
+    } catch (err) {
+      setError('로그인 처리 중 오류가 발생했습니다.')
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-md">
@@ -92,6 +138,54 @@ function LoginContent() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
+          <form onSubmit={handleEmailLogin} className="space-y-4 mb-6">
+            <div className="space-y-2">
+              <Label htmlFor="username">아이디</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="아이디를 입력하세요"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">비밀번호</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="비밀번호를 입력하세요"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full h-12" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  로그인 중...
+                </>
+              ) : (
+                '로그인'
+              )}
+            </Button>
+          </form>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                또는
+              </span>
+            </div>
+          </div>
 
           <div className="space-y-3">
             <Button
@@ -170,7 +264,10 @@ function LoginContent() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-muted-foreground text-center">
-            처음 방문하셨나요? 위 버튼으로 바로 시작하세요!
+            처음 방문하셨나요?{' '}
+            <Link href="/signup" className="text-primary hover:underline font-medium">
+              회원가입
+            </Link>
           </div>
         </CardFooter>
       </Card>
