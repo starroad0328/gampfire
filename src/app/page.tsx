@@ -7,6 +7,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPopularGames as getPopularGamesAPI } from '@/lib/igdb'
 import { getRecommendedGamesForUser } from '@/lib/recommendations'
+import { translateGenre } from '@/lib/translations'
 
 async function getPopularGames() {
   try {
@@ -209,7 +210,7 @@ export default async function Home() {
                               key={genre}
                               className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
                             >
-                              {genre}
+                              {translateGenre(genre)}
                             </span>
                           ))}
                         </div>
