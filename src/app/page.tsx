@@ -53,7 +53,7 @@ export default async function Home() {
       <section className="relative overflow-hidden py-20">
         {/* Background Game Covers */}
         <div className="absolute inset-0 z-0">
-          <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-14 xl:grid-cols-16 gap-2 opacity-40">
+          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-10 xl:grid-cols-12 gap-2 opacity-40">
             {games.map((game: any, index: number) => (
               <div key={game.id} className="aspect-[3/4] relative">
                 {game.cover && (
@@ -62,7 +62,7 @@ export default async function Home() {
                     alt={game.name}
                     fill
                     className="object-cover"
-                    sizes="150px"
+                    sizes="250px"
                     priority={index < 20}
                   />
                 )}
