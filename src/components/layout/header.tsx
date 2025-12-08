@@ -101,7 +101,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             {isLoading ? (
               <div className="h-10 w-20 bg-muted animate-pulse rounded" />
-            ) : session ? (
+            ) : session?.user ? (
               <>
                 {/* Notifications Dropdown */}
                 <DropdownMenu>
