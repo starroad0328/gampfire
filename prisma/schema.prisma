@@ -275,6 +275,15 @@ model VerificationToken {
   @@index([token])
 }
 
+// Deleted emails (for preventing re-registration)
+model DeletedEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  deletedAt DateTime @default(now())
+
+  @@index([email])
+}
+
 // Notifications
 model Notification {
   id          String   @id @default(cuid())

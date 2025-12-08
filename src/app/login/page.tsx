@@ -34,6 +34,7 @@ function LoginContent() {
         invalid_token: '유효하지 않은 로그인 토큰입니다.',
         user_not_found: '사용자를 찾을 수 없습니다.',
         verification_failed: '인증에 실패했습니다.',
+        DeletedAccount: '삭제된 계정입니다. 해당 이메일로는 재가입이 불가능합니다.',
       }
       setError(errorMessages[steamError] || 'Steam 로그인 중 오류가 발생했습니다.')
     }

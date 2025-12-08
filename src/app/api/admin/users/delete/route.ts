@@ -37,13 +37,30 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Get user's reviewed games before deletion
-    const userReviews = await prisma.review.findMany({
-      where: { userId },
-      select: { gameId: true },
+    // Get user's reviewed games and email before deletion
+    const userWithReviews = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        reviews: { select: { gameId: true } },
+      },
     })
 
-    const affectedGameIds = [...new Set(userReviews.map(r => r.gameId))]
+    if (!userWithReviews) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    const affectedGameIds = [...new Set(userWithReviews.reviews.map(r => r.gameId))]
+
+    // Save deleted email to prevent re-registration
+    await prisma.deletedEmail.upsert({
+      where: { email: userWithReviews.email },
+      update: { deletedAt: new Date() },
+      create: { email: userWithReviews.email },
+    })
 
     // Delete user (Cascade will delete all related data: reviews, likes, etc.)
     await prisma.user.delete({

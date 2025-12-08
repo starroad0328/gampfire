@@ -126,6 +126,15 @@ export const authOptions: NextAuthOptions = {
             return false
           }
 
+          // Check if email was deleted (banned from re-registration)
+          const deletedEmail = await prisma.deletedEmail.findUnique({
+            where: { email },
+          })
+
+          if (deletedEmail) {
+            return '/login?error=DeletedAccount'
+          }
+
           // Check if user exists
           let existingUser = await prisma.user.findUnique({
             where: { email },
