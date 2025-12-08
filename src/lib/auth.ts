@@ -172,7 +172,18 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       // Send properties to the client
-      if (session.user) {
+      if (session.user && token.id) {
+        // Check if user still exists in database
+        const userExists = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { id: true },
+        })
+
+        if (!userExists) {
+          // User was deleted, return empty session to force logout
+          return { ...session, user: undefined } as any
+        }
+
         session.user.id = token.id as string
         session.user.username = token.username as string
         session.user.needsOnboarding = token.needsOnboarding as boolean

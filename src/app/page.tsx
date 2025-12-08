@@ -56,7 +56,7 @@ export default async function Home() {
         <div className="absolute inset-0 z-0">
           <div className="grid grid-cols-5 md:grid-cols-8 lg:grid-cols-12 xl:grid-cols-14 gap-2 opacity-40">
             {games.map((game: any, index: number) => (
-              <div key={game.id} className="aspect-[3/4] relative">
+              <div key={game.id} className={`aspect-[3/4] relative ${index >= 15 ? 'hidden md:block' : ''}`}>
                 {game.cover && (
                   <Image
                     src={game.cover}
