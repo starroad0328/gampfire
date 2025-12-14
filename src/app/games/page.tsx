@@ -4,8 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GameCard } from '@/components/features/game-card'
-import { GenreCircle } from '@/components/features/genre-circle'
-import { Filter, Flame, Gamepad2 } from 'lucide-react'
+import { Filter, Flame, Gamepad2, Check } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { translateGenre } from '@/lib/translations'
 import Link from 'next/link'
@@ -199,16 +198,27 @@ export default function GamesPage() {
 
         {/* Genre Selection Section */}
         {showGenreCircle && (
-          <div className="mb-6 p-6 bg-muted/30 rounded-lg border border-border">
-            <div className="flex items-center gap-2 mb-4">
-              <Gamepad2 className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">장르 선택</h3>
+          <div className="mb-6 p-6 bg-gradient-to-br from-muted/40 to-muted/20 rounded-xl border border-border/50 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Gamepad2 className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">장르 필터</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedGenres.length > 0
+                      ? `${selectedGenres.length}개 장르 선택됨`
+                      : '원하는 장르를 선택하세요'}
+                  </p>
+                </div>
+              </div>
               {selectedGenres.length > 0 && (
                 <button
                   onClick={() => setSelectedGenres([])}
-                  className="ml-auto text-sm text-muted-foreground hover:text-foreground underline"
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
                 >
-                  초기화
+                  전체 초기화
                 </button>
               )}
             </div>
@@ -226,15 +236,24 @@ export default function GamesPage() {
                         setSelectedGenres([...selectedGenres, genre.name])
                       }
                     }}
-                    className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+                    className={`relative group p-4 rounded-xl border-2 transition-all duration-200 ${
                       isSelected
-                        ? 'border-primary bg-primary/10 shadow-md'
-                        : 'border-border bg-background hover:border-primary/50'
+                        ? 'border-primary bg-primary/15 shadow-lg shadow-primary/20 scale-[1.02]'
+                        : 'border-border/50 bg-background/80 hover:border-primary/60 hover:bg-muted/50 hover:scale-[1.02] hover:shadow-md'
                     }`}
                   >
+                    {isSelected && (
+                      <div className="absolute -top-1.5 -right-1.5 bg-primary rounded-full p-1 shadow-lg">
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      </div>
+                    )}
                     <div className="flex flex-col items-center gap-2">
-                      <span className="text-2xl">{genre.icon}</span>
-                      <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                      <span className={`text-3xl transition-transform ${isSelected ? 'scale-110' : 'group-hover:scale-110'}`}>
+                        {genre.icon}
+                      </span>
+                      <span className={`text-sm font-semibold transition-colors ${
+                        isSelected ? 'text-primary' : 'text-foreground group-hover:text-primary'
+                      }`}>
                         {translateGenre(genre.name)}
                       </span>
                     </div>
@@ -244,16 +263,23 @@ export default function GamesPage() {
             </div>
 
             {selectedGenres.length > 0 && (
-              <div className="mt-4 flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-muted-foreground">선택됨:</span>
-                {selectedGenres.map(genre => (
-                  <span
-                    key={genre}
-                    className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium"
-                  >
-                    {translateGenre(genre)}
-                  </span>
-                ))}
+              <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Filter className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">활성 필터</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {selectedGenres.map(genre => (
+                    <button
+                      key={genre}
+                      onClick={() => setSelectedGenres(selectedGenres.filter(g => g !== genre))}
+                      className="group px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary rounded-full text-sm font-medium transition-all hover:scale-105 flex items-center gap-1.5"
+                    >
+                      {translateGenre(genre)}
+                      <span className="opacity-60 group-hover:opacity-100">×</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -430,13 +456,6 @@ export default function GamesPage() {
         <div ref={observerTarget} className="flex justify-center py-8">
           {loading && <div className="text-muted-foreground">로딩 중...</div>}
         </div>
-      )}
-
-      {showGenreCircle && (
-        <GenreCircle
-          onSelectGenres={handleGenreSelect}
-          onClose={() => setShowGenreCircle(false)}
-        />
       )}
     </div>
   )
